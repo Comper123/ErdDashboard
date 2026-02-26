@@ -1,13 +1,13 @@
 // src/app/api/auth/logout/route.ts
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { deleteRefreshToken } from '@/lib/auth/token-db';
 import { getUserFromRequest } from '@/lib/auth/get-user';
 import { deleteAllUserRefreshTokens } from '@/lib/auth/token-db';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const { refreshToken, logoutAll } = await request.json();
-    const user = await getUserFromRequest();
+    const user = await getUserFromRequest(request);
 
     if (logoutAll && user) {
       // Выход со всех устройств

@@ -4,17 +4,22 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSchemas, SchemaDetails } from '@/hooks/useSchemas';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import ERDEditor from '@/components/erd/ERDEditor';
+import { TableData, RelationshipData } from '@/components/erd/ERDEditor';
 
-export default function SchemaPage({ params }: { params: { id: string } }) {
-  const { user, isLoading: authLoading } = useAuth();
-  const { getSchemaDetails } = useSchemas();
+export default function SchemaPage() {
+  const { user, isLoading: authLoading, accessToken } = useAuth();
+  const { getSchemaDetails, updateSchema } = useSchemas();
   const router = useRouter();
-  
+  const params = useParams();
+  const schemaId = params?.id as string;
+
   const [schema, setSchema] = useState<SchemaDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -23,21 +28,61 @@ export default function SchemaPage({ params }: { params: { id: string } }) {
   }, [authLoading, user, router]);
 
   useEffect(() => {
-    if (user) {
+    if (user && schemaId) {
       loadSchema();
     }
-  }, [user, params.id]);
+  }, [user, schemaId]);
 
   const loadSchema = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await getSchemaDetails(params.id);
+      const data = await getSchemaDetails(schemaId);
       setSchema(data);
     } catch (err: any) {
       setError(err.message);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSave = async (tables: TableData[], relationships: RelationshipData[]) => {
+    if (!accessToken || !schema) return;
+    
+    try {
+      setIsSaving(true);
+      
+      // Сохраняем через API
+      const response = await fetch(`/api/schemas/${schemaId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: schema.name,
+          description: schema.description,
+          tables,
+          relationships,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Ошибка при сохранении');
+      }
+
+      // Обновляем локальное состояние
+      setSchema(prev => prev ? {
+        ...prev,
+        tables,
+        relationships,
+      } : null);
+
+      alert('Схема успешно сохранена!');
+    } catch (err: any) {
+      alert(`Ошибка: ${err.message}`);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -58,7 +103,7 @@ export default function SchemaPage({ params }: { params: { id: string } }) {
             href="/dashboard"
             className="text-indigo-600 hover:text-indigo-800"
           >
-            ← Back to Dashboard
+            ← Вернуться к списку схем
           </Link>
         </div>
       </div>
@@ -69,85 +114,94 @@ export default function SchemaPage({ params }: { params: { id: string } }) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">Schema not found</p>
+          <p className="text-gray-600 mb-4">Схема не найдена</p>
           <Link
             href="/dashboard"
             className="text-indigo-600 hover:text-indigo-800"
           >
-            ← Back to Dashboard
+            ← Вернуться к списку схем
           </Link>
         </div>
       </div>
     );
   }
 
+  // Преобразуем данные для редактора
+  const initialTables: TableData[] = schema.tables.map(table => ({
+    id: table.id,
+    name: table.name,
+    fields: table.fields,
+    positionX: parseFloat(table.positionX) || 100,
+    positionY: parseFloat(table.positionY) || 100,
+    config: table.config || {},
+  }));
+
+  const initialRelationships: RelationshipData[] = schema.relationships.map(rel => ({
+    id: rel.id,
+    fromTableId: rel.fromTableId,
+    fromFieldId: rel.fromFieldId,
+    toTableId: rel.toTableId,
+    toFieldId: rel.toFieldId,
+    type: rel.type as any,
+  }));
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      {/* Шапка */}
       <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex items-center gap-4">
               <Link
                 href="/dashboard"
-                className="text-sm text-indigo-600 hover:text-indigo-800 mb-2 inline-block"
+                className="text-sm text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1"
               >
-                ← Back to Dashboard
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Назад
               </Link>
-              <h1 className="text-3xl font-bold text-gray-900">{schema.name}</h1>
-              {schema.description && (
-                <p className="mt-1 text-gray-600">{schema.description}</p>
-              )}
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">{schema.name}</h1>
+                {schema.description && (
+                  <p className="text-sm text-gray-600">{schema.description}</p>
+                )}
+              </div>
             </div>
-            <button
-              onClick={() => router.push(`/dashboard/schemas/${schema.id}/edit`)}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-            >
-              Edit Schema
-            </button>
+            
+            {/* Индикатор сохранения */}
+            {isSaving && (
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
+                Сохранение...
+              </div>
+            )}
           </div>
         </div>
       </header>
 
-      {/* Main content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <div className="text-center py-12">
-            <svg
-              className="mx-auto h-16 w-16 text-gray-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"
-              />
-            </svg>
-            <h2 className="mt-4 text-lg font-medium text-gray-900">ERD Editor Coming Soon</h2>
-            <p className="mt-2 text-gray-600">
-              The visual ERD editor is under construction. You'll be able to design your database schema here.
-            </p>
-            
-            {/* Temporary stats display */}
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-500">Tables</p>
-                <p className="text-2xl font-bold text-indigo-600">{schema.tables.length}</p>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-500">Fields</p>
-                <p className="text-2xl font-bold text-indigo-600">
-                  {schema.tables.reduce((acc, table) => acc + table.fields.length, 0)}
-                </p>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-500">Relationships</p>
-                <p className="text-2xl font-bold text-indigo-600">{schema.relationships.length}</p>
-              </div>
-            </div>
+      {/* Основной контент - ERD Editor */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <ERDEditor
+          schemaId={schemaId}
+          initialTables={initialTables}
+          initialRelationships={initialRelationships}
+          onSave={handleSave}
+        />
+        
+        {/* Подсказки */}
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-indigo-500 rounded-full"></div>
+            <span>Перетаскивайте таблицы для изменения позиции</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-indigo-500 rounded-full"></div>
+            <span>Соединяйте поля таблиц для создания связей</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-indigo-500 rounded-full"></div>
+            <span>Кликайте на таблицу для редактирования полей</span>
           </div>
         </div>
       </main>

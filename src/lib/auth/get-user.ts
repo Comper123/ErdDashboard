@@ -11,7 +11,7 @@ export function getUserFromRequest(request: NextRequest): UserFromRequest | null
   const token = authHeader?.startsWith('Bearer ') 
     ? authHeader.substring(7) 
     : null;
-
+  console.log(token);
   if (!token) {
     return null;
   }

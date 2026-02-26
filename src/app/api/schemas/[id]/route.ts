@@ -8,15 +8,16 @@ import { getUserFromToken } from '@/lib/auth/from-token';
 // GET /api/schemas/[id] - получить конкретную схему со всеми данными
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params; 
     const user = getUserFromToken(request);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const schemaId = params.id;
+    const schemaId = id;
 
     // Проверяем, принадлежит ли схема пользователю
     const [schema] = await db
@@ -80,45 +81,101 @@ export async function GET(
 // PUT /api/schemas/[id] - обновить схему
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = getUserFromToken(request);
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
     }
 
-    const schemaId = params.id;
-    const { name, description } = await request.json();
+    const { id } = await params;
+    const { name, description, tables: newTables, relationships: newRelationships } = await request.json();
 
     // Проверяем права доступа
     const [existingSchema] = await db
       .select()
       .from(schemas)
-      .where(and(eq(schemas.id, schemaId), eq(schemas.userId, user.userId)));
+      .where(and(eq(schemas.id, id), eq(schemas.userId, user.userId)));
 
     if (!existingSchema) {
       return NextResponse.json(
-        { error: 'Schema not found' },
+        { error: 'Схема не найдена' },
         { status: 404 }
       );
     }
 
-    const [updatedSchema] = await db
+    // Обновляем основную информацию схемы
+    await db
       .update(schemas)
       .set({
         name: name || existingSchema.name,
         description: description !== undefined ? description : existingSchema.description,
         updatedAt: new Date(),
       })
-      .where(eq(schemas.id, schemaId))
-      .returning();
+      .where(eq(schemas.id, id));
 
-    return NextResponse.json(updatedSchema);
+    // Если переданы таблицы, обновляем их
+    if (newTables) {
+      // Удаляем старые таблицы и поля
+      const oldTables = await db.select().from(tables).where(eq(tables.schemaId, id));
+      for (const table of oldTables) {
+        await db.delete(fields).where(eq(fields.tableId, table.id));
+      }
+      await db.delete(tables).where(eq(tables.schemaId, id));
+
+      // Создаем новые таблицы и поля
+      for (const table of newTables) {
+        const [newTable] = await db
+          .insert(tables)
+          .values({
+            id: table.id,
+            schemaId: id,
+            name: table.name,
+            positionX: table.positionX.toString(),
+            positionY: table.positionY.toString(),
+            config: table.config || {},
+          })
+          .returning();
+
+        // Создаем поля для таблицы
+        for (const field of table.fields) {
+          await db.insert(fields).values({
+            id: field.id,
+            tableId: newTable.id,
+            name: field.name,
+            type: field.type,
+            isPrimaryKey: field.isPrimaryKey,
+            isNullable: field.isNullable,
+            isUnique: field.isUnique,
+            defaultValue: field.defaultValue,
+          });
+        }
+      }
+    }
+
+    // Если переданы связи, обновляем их
+    if (newRelationships) {
+      await db.delete(relationships).where(eq(relationships.fromTableId, id));
+      
+      for (const rel of newRelationships) {
+        await db.insert(relationships).values({
+          id: rel.id,
+          fromTableId: rel.fromTableId,
+          fromFieldId: rel.fromFieldId,
+          toTableId: rel.toTableId,
+          toFieldId: rel.toFieldId,
+          type: rel.type,
+          config: {},
+        });
+      }
+    }
+
+    return NextResponse.json({ message: 'Схема обновлена' });
   } catch (error) {
-    console.error('Error updating schema:', error);
+    console.error('Ошибка при обновлении схемы:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Внутренняя ошибка сервера' },
       { status: 500 }
     );
   }
@@ -130,12 +187,13 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    const { id } = await params; 
     const user = getUserFromToken(request);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const schemaId = params.id;
+    const schemaId = id;
 
     // Проверяем права доступа
     const [existingSchema] = await db
