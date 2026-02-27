@@ -163,5 +163,6 @@ export function useAuth() {
     register,
     logout,
     refreshAccessToken,
+    
   };
 }

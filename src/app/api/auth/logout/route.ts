@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: 'Refresh token is required' },
+      { error: 'Refresh token не передан' },
       { status: 400 }
     );
   } catch (error) {

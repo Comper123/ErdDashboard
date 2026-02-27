@@ -4,11 +4,12 @@ import { db } from '@/lib/db';
 import { schemas, tables, fields, relationships } from '@/lib/db/schema';
 import { getUserFromToken } from '@/lib/auth/from-token';
 import { eq, and, desc } from 'drizzle-orm';
+import { getUserFromRequest } from '@/lib/auth/get-user';
 
 // GET /api/schemas - получить все схемы пользователя
 export async function GET(request: NextRequest) {
   try {
-    const user = getUserFromToken(request);
+    const user = getUserFromRequest(request);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
         tablesCount: db.$count(tables, eq(tables.schemaId, schemas.id)),
       })
       .from(schemas)
-      .where(eq(schemas.userId, user.userId))
+      .where(eq(schemas.userId, user.id))
       .orderBy(desc(schemas.updatedAt));
 
     return NextResponse.json(userSchemas);
