@@ -40,11 +40,10 @@ export async function GET(request: NextRequest) {
 // POST /api/schemas - создать новую схему
 export async function POST(request: NextRequest) {
   try {
-    const user = getUserFromToken(request);
+    const user = getUserFromRequest(request);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
     const { name, description } = await request.json();
 
     if (!name) {
@@ -57,7 +56,7 @@ export async function POST(request: NextRequest) {
     const [newSchema] = await db
       .insert(schemas)
       .values({
-        userId: user.userId,
+        userId: user.id,
         name,
         description,
       })
