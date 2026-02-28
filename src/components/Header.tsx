@@ -47,7 +47,7 @@ export default function Header() {
           <UserRound className="h-5 w-5"/>
         </div>
         {isOpenProfileMenu && (
-          <div className="absolute top-10 right-0 bg-gray-50 shadow-lg rounded-md p-2 min-w-[300px] border-[1px] flex flex-col gap-1 z-11" ref={menuRef}>
+          <div className="absolute top-10 right-0 bg-gray-50 shadow-lg rounded-md p-2 min-w-[300px] border-[1px] flex flex-col gap-1 z-50" ref={menuRef}>
             <div className="px-3 py-2">
               <p className="font-semibold">{user?.email}</p>
             </div>
@@ -55,7 +55,7 @@ export default function Header() {
             <Link href='/dashboard' className="duration-300 text-sm hover:bg-slate-300/30 px-3 py-2 rounded-md min-w-full flex gap-2 items-center">
               <LayoutDashboard className="h-4 w-4"/>Dashboard
             </Link>
-            <div onClick={() => handleLogout()} className="duration-300 text-sm hover:bg-slate-300/30 px-3 py-2 rounded-md min-w-full flex gap-2 items-center">
+            <div onClick={() => handleLogout()} className="duration-300 cursor-pointer text-sm hover:bg-slate-300/30 px-3 py-2 rounded-md min-w-full flex gap-2 items-center">
               <LogOut className="h-4 w-4"/>Выйти
             </div>
           </div>
