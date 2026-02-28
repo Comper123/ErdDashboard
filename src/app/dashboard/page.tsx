@@ -12,8 +12,11 @@ import { useEffect, useState } from 'react';
 
 
 interface CreatedSchema{
-  name: string,
-  description: string
+  name: string;
+  description: string;
+  createdTime?: Date;
+  updateTime?: Date;
+  id: string;
 }
 
 
@@ -24,7 +27,7 @@ export default function DashboardPage() {
   // Данные
   const [schemas, setSchemas] = useState<Schema[]>([]);
   const { user, accessToken } = useAuth();
-  const [createdSchema, setCreatedSchema] = useState<CreatedSchema>({name: '', description: ''})
+  const [createdSchema, setCreatedSchema] = useState<CreatedSchema>({name: '', description: '', id: '1'})
 
   useEffect(() => {
     async function fetchSchemas() {
@@ -38,6 +41,7 @@ export default function DashboardPage() {
             throw new Error('Ошибка загрузки схем');
           }
         const data = await response.json();
+        setSchemas(data);
         console.log('Загруженные схемы:', data);
       } catch (error) {
         console.error('Ошибка при загрузке схем:', error);
@@ -51,6 +55,7 @@ export default function DashboardPage() {
 
   const closeCreateModal = () => {
     setIsCreateModalOpen(false);
+    setCreatedSchema({name: '', description: '', id: '1'});
   }
 
   const openCreateModal = () => {
@@ -60,6 +65,7 @@ export default function DashboardPage() {
   const handleCreateSchema = async (e: React.SubmitEvent) => {
     e.preventDefault();
     try {
+      // Отправляем запрос на сервер
       const response = await fetch(`/api/schemas`, {
         method: "POST",
         body: JSON.stringify({
@@ -71,10 +77,13 @@ export default function DashboardPage() {
         }
       });
       if (response.ok) {
-        console.log("Успех")
+        // В случае успешно выполненного запроса на сервере создаем без перезагрузки новую схему
+        const newSchema = await response.json();
+        setSchemas(prevSchemas => [newSchema, ...prevSchemas]);
+        closeCreateModal();
       }
     } catch (error) {
-      console.log(error);      
+      console.log(error);
     }
   }
 

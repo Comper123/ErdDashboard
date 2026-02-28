@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       .values({
         userId: user.id,
         name,
-        description,
+        description
       })
       .returning();
 

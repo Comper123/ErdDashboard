@@ -37,7 +37,7 @@ export default function Header() {
   }
 
   return (
-    <header className="flex justify-between px-[10%] border-b border-gray-300 py-3">
+    <header className="flex justify-between px-[10%] border-b py-3">
       <div className="flex items-center">
         <p className="font-semibold text-xl flex gap-2 items-center"><DatabaseZap className="text-gray-800"/>ERD Dashboard</p>
       </div>
