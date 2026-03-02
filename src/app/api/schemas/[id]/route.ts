@@ -192,30 +192,17 @@ export async function DELETE(
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
     const schemaId = id;
 
     // Проверяем права доступа
-    const [existingSchema] = await db
-      .select()
-      .from(schemas)
-      .where(and(eq(schemas.id, schemaId), eq(schemas.userId, user.userId)));
-
+    const [existingSchema] = await db.select().from(schemas).where(and(eq(schemas.id, schemaId), eq(schemas.userId, user.userId)));
     if (!existingSchema) {
-      return NextResponse.json(
-        { error: 'Schema not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Schema not found' }, { status: 404 });
     }
-
     await db.delete(schemas).where(eq(schemas.id, schemaId));
-
-    return NextResponse.json({ message: 'Schema deleted successfully' });
+    return NextResponse.json({ message: 'Схема успешно удалена' });
   } catch (error) {
     console.error('Error deleting schema:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

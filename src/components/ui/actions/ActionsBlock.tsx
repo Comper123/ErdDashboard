@@ -15,18 +15,18 @@ export default function ActionsBlock({
   const actionRef = useRef<HTMLDivElement>(null);
 
   // ! Временно делаем закрытие по ивенту клика (правильно хранить состояние в родительском компоненте)
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (actionRef.current && !actionRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
+  // useEffect(() => {
+  //   function handleClickOutside(event: MouseEvent) {
+  //     if (actionRef.current && !actionRef.current.contains(event.target as Node)) {
+  //       setIsOpen(false);
+  //     }
+  //   }
     
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  })
+  //   document.addEventListener('mousedown', handleClickOutside);
+  //   return () => {
+  //     document.removeEventListener('mousedown', handleClickOutside);
+  //   };
+  // })
 
   return (
     <div className="relative">

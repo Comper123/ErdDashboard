@@ -6,11 +6,15 @@ import Action from "@/components/ui/actions/Action";
 
 
 interface SchemaCardProps {
-  schema: Schema
+  schema: Schema,
+  onDelete: () => void;
 }
 
 
-export default function SchemaCard({ schema } : SchemaCardProps){
+export default function SchemaCard({ 
+  schema,
+  onDelete 
+} : SchemaCardProps){
 
   return (
     <div className="border rounded-lg p-4 min-h-40 flex flex-col duration-300 hover:-translate-y-1 cursor-pointer">
@@ -20,7 +24,7 @@ export default function SchemaCard({ schema } : SchemaCardProps){
           <p className="text-gray-600 text-sm">{schema.description}</p>
         </div>
         <ActionsBlock className="min-w-[200px]">
-          <Action><Trash className="h-4"/>Удалить</Action>
+          <Action onClick={() => onDelete()}><Trash className="h-4"/>Удалить</Action>
           {/* <Action><Pencil className="h-4"/>Изменить</Action> */}
         </ActionsBlock>
       </div>

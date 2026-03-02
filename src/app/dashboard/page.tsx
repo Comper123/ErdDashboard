@@ -24,6 +24,7 @@ interface CreatedSchema{
 export default function DashboardPage() {
   // Состояния
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
 
   // Данные
   const [schemas, setSchemas] = useState<Schema[]>([]);
@@ -31,6 +32,8 @@ export default function DashboardPage() {
   const { user, accessToken } = useAuth();
   const [createdSchema, setCreatedSchema] = useState<CreatedSchema>({name: '', description: '', id: '1'})
   const [searchText, setSearchText] = useState<string>('');
+  const [deletedSchemaName, setDeletedSchemaName] = useState<string>('');
+  const [deletedSchemaId, setDeletedSchemaId] = useState<string>('');
 
   useEffect(() => {
     setSearchSchemas(schemas.filter((schema) => schema.name.startsWith(searchText)));
@@ -107,9 +110,19 @@ export default function DashboardPage() {
         </form>
       </Modal>
 
+      <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} title='Создание новой схемы данных' size='sm'>
+        <form action="" method='POST' className='py-6 flex flex-col gap-4' onSubmit={handleCreateSchema}>
+          <Input type='text' label='Название' value={createdSchema.name} required
+            onChange={(e) => setCreatedSchema({...createdSchema, name: e.target.value})}/>
+          <Input multiline label='Описание схемы данных' value={createdSchema.description} required
+            onChange={(e) => setCreatedSchema({...createdSchema, description: e.target.value})}/>
+          <Button size='full'>Создать</Button>
+        </form>
+      </Modal>
+
       <Header></Header>
-      <section className='px-[10%] pt-10'>
-        <h2 className='font-semibold text-lg'>Ваши схемы данных:</h2>
+      <section className='px-[10%] pt-10 pb-20'>
+        <h2 className='font-bold text-2xl'>Ваши схемы данных:</h2>
         <div className='mt-2 mb-1 flex gap-2 w-1/3 items-center'>
           <div className='relative w-full'> 
             <Search className='absolute top-2 left-2 h-5 text-gray-400'/>
@@ -135,7 +148,12 @@ export default function DashboardPage() {
             </div>
           )}
           {searchSchemas.map((schema) => (
-            <SchemaCard schema={schema} key={schema.id}></SchemaCard>
+            <SchemaCard schema={schema} key={schema.id} 
+            onDelete={() => {
+              setDeletedSchemaId(schema.id);
+              setDeletedSchemaName(schema.name);
+              setIsDeleteModalOpen(true);
+            }}></SchemaCard>
           ))}
         </article>
       </section>

@@ -1,0 +1,1 @@
+ALTER TABLE "schemas" ADD CONSTRAINT "schemas_name_unique" UNIQUE("name");
