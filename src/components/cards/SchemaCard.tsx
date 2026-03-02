@@ -1,30 +1,30 @@
 import { dateToString } from "@/lib/utils/date";
 import { Schema } from "@/types/schemas";
-import { SquarePen, ClockPlus } from "lucide-react";
+import { SquarePen, ClockPlus, Pencil, Trash } from "lucide-react";
 import ActionsBlock from "@/components/ui/actions/ActionsBlock";
 import Action from "@/components/ui/actions/Action";
 
 
-interface SchemaProps {
+interface SchemaCardProps {
   schema: Schema
 }
 
 
-export default function SchemaCard({ schema } : SchemaProps){
+export default function SchemaCard({ schema } : SchemaCardProps){
 
   return (
-    <div className="border rounded-lg p-4 min-h-40 flex flex-col">
+    <div className="border rounded-lg p-4 min-h-40 flex flex-col duration-300 hover:-translate-y-1 cursor-pointer">
       <div className="flex justify-between">
         <div>
           <h3 className="font-semibold text-lg">{schema.name}</h3>
           <p className="text-gray-600 text-sm">{schema.description}</p>
         </div>
-        <ActionsBlock>
-          <Action>Удалить</Action>
-          <Action>Изменить</Action>
+        <ActionsBlock className="min-w-[200px]">
+          <Action><Trash className="h-4"/>Удалить</Action>
+          {/* <Action><Pencil className="h-4"/>Изменить</Action> */}
         </ActionsBlock>
       </div>
-      <div className="mt-auto flex gap-4   justify-end">
+      <div className="mt-auto flex gap-4 justify-end">
         <div className="text-gray-400 text-xs font-semibold flex">
           <ClockPlus className="h-4" />
           <p>{dateToString(schema.createdAt)}</p>
