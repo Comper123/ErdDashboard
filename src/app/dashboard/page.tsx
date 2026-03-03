@@ -33,6 +33,7 @@ export default function DashboardPage() {
   const { user, accessToken } = useAuth();
   const [createdSchema, setCreatedSchema] = useState<CreatedSchema>({name: '', description: '', id: '1'})
   const [searchText, setSearchText] = useState<string>('');
+  const [editedSchema, setEditedSchema] = useState<CreatedSchema>({name: '', description: '', id: '1'})
 
   const [deletedSchemaName, setDeletedSchemaName] = useState<string>('');
   const [deletedSchemaId, setDeletedSchemaId] = useState<string>('');
@@ -42,7 +43,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     setSearchSchemas(schemas.filter((schema) => schema.name.startsWith(searchText)));
-}, [schemas, searchText])
+  }, [schemas, searchText])
 
   useEffect(() => {
     async function fetchSchemas() {
@@ -122,6 +123,41 @@ export default function DashboardPage() {
       console.log(error);
     }
   }
+  
+  const handleEditSchema = async(e: React.SubmitEvent) => {
+    e.preventDefault();
+    try {
+      console.log(editedSchema);
+      const response = await fetch(`/api/schemas/${editedSchemaId}`, {
+        method: "PUT",
+        headers: {
+          'authorization': 'Bearer ' + accessToken
+        },
+        body: JSON.stringify({
+          name: editedSchema.name,
+          description: editedSchema.description
+        })
+      });
+      if (response.ok) {
+        const editedSchema = await response.json();
+        console.log(editedSchema);
+        setSchemas(schemas => {
+          return schemas.map(schema => 
+            schema.id === editedSchemaId ? 
+              {...schema, 
+                name: editedSchema.name, 
+                description: editedSchema.description, 
+                updatedAt: editedSchema.updatedAt} 
+            : schema)
+        });
+        setIsEditModalOpen(false);
+      } else {  
+        console.log("Ошибка измнения схемы");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 max-w-[99vw]">
@@ -158,12 +194,16 @@ export default function DashboardPage() {
       </Modal>
 
       <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title='Изменение схемы данных' size='sm'>
-        <form action="" method='POST' className='py-6 flex flex-col gap-4' onSubmit={handleCreateSchema}>
-          <Input type='text' label='Название' value={createdSchema.name} required
-            onChange={(e) => setCreatedSchema({...createdSchema, name: e.target.value})}/>
-          <Input multiline label='Описание схемы данных' value={createdSchema.description} required
-            onChange={(e) => setCreatedSchema({...createdSchema, description: e.target.value})}/>
-          <Button size='full'>Изменить</Button>
+        <p className='mt-1 text-gray-600'>Изменение схемы: <b className='text-black bg-gray-200 px-2 pb-1 rounded-md'>{editedSchemaName}</b></p>
+        <form action="" method='POST' className='py-6 flex flex-col gap-4' onSubmit={(e) => handleEditSchema(e)}>
+          <Input type='text' label='Название' value={editedSchema.name} required
+            onChange={(e) => setEditedSchema({...editedSchema, name: e.target.value})}/>
+          <Input multiline label='Описание схемы данных' value={editedSchema.description} required
+            onChange={(e) => setEditedSchema({...editedSchema, description: e.target.value})}/>
+          <div className='grid grid-cols-2 gap-2'>
+          <Button size='full' color='gray' type='button' onClick={() => setIsEditModalOpen(false)}>Отмена</Button>
+          <Button size='full' color='red'>Изменить</Button>
+        </div>
         </form>
       </Modal>
 
@@ -204,6 +244,7 @@ export default function DashboardPage() {
               onEdit={() => {
                 setEditedSchemaId(schema.id);
                 setEditedSchemaName(schema.name);
+                setEditedSchema({name: schema.name, description: schema.description || '', id: schema.id});
                 setIsEditModalOpen(true);
               }}
               />
