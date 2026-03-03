@@ -2,20 +2,25 @@
 
 interface ButtonProps {
     children: React.ReactNode;
-    color?: 'indigo' | 'red';
+    color?: 'indigo' | 'red' | 'gray';
     size?: 'third' | 'half' | 'full';
+    type?: 'button' | 'submit'
     position?: 'start' | 'center' | 'end';
+    onClick?: () => void;
 }
 
 export default function Button({
     children,
     color = 'indigo',
     size = 'third',
-    position = 'end'
+    position = 'end',
+    type = 'submit',
+    onClick = () => {}
 } : ButtonProps) {
     const colorThemes = {
         indigo: 'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500',
-        red: 'bg-red-500'
+        red: 'bg-red-400 text-white hover:bg-red-500 focus:ring-ref-500 font-semibold',
+        gray: 'bg-gray-200 hover:bg-gray-300'
     }
 
     const sizes = {
@@ -30,5 +35,6 @@ export default function Button({
         end: 'ml-auto'
     }
 
-    return <button className={`${colorThemes[color]} ${sizes[size]} ${positions[position]} border border-transparent py-2 rounded-lg`}>{children}</button>
+    return <button className={`${colorThemes[color]} ${sizes[size]} ${positions[position]} border duration-300 border-transparent py-2 rounded-lg`}
+        onClick={onClick} type={type}>{children}</button>
 }

@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { schemas, tables, fields, relationships } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { getUserFromToken } from '@/lib/auth/from-token';
+import { getUserFromRequest } from '@/lib/auth/get-user';
 
 // GET /api/schemas/[id] - получить конкретную схему со всеми данными
 export async function GET(
@@ -188,21 +189,22 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params; 
-    const user = getUserFromToken(request);
+    const user = getUserFromRequest(request);
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Вы не авторизованы' }, { status: 401 });
     }
     const schemaId = id;
 
     // Проверяем права доступа
-    const [existingSchema] = await db.select().from(schemas).where(and(eq(schemas.id, schemaId), eq(schemas.userId, user.userId)));
+    const [existingSchema] = await db.select().from(schemas).where(and(eq(schemas.id, schemaId), eq(schemas.userId, user.id)));
+    
     if (!existingSchema) {
-      return NextResponse.json({ error: 'Schema not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Схема не найдена' }, { status: 404 });
     }
     await db.delete(schemas).where(eq(schemas.id, schemaId));
     return NextResponse.json({ message: 'Схема успешно удалена' });
   } catch (error) {
-    console.error('Error deleting schema:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Ошибка удаления схемы:', error);
+    return NextResponse.json({ error: 'Ошибка удаления схемы' }, { status: 500 });
   }
 }
