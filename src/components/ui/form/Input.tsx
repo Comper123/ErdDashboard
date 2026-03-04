@@ -12,6 +12,7 @@ interface BaseInputProps {
     disabled?: boolean;
     required?: boolean;
     name?: string;
+    placeholder?: string;
 }
 
 // Пропсы для Input
@@ -41,7 +42,8 @@ export default function Input({
     required = false,
     name,
     multiline = false,
-    rows = 4
+    rows = 4,
+    placeholder = ''
 }: FieldProps) {
     const [isFocused, setIsFocused] = useState(false);
     const [inputValue, setInputValue] = useState(value);
@@ -96,6 +98,7 @@ export default function Input({
                         name={name}
                         rows={rows}
                         className={fieldClasses}
+                        placeholder={placeholder}
                     />
                 ) : (
                     <input
@@ -109,6 +112,7 @@ export default function Input({
                         required={required}
                         name={name}
                         className={fieldClasses}
+                        placeholder={placeholder}
                     />
                 )}
                 {/* Плавающая подсказка (лейбл) */}
