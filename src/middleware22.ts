@@ -64,8 +64,9 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/api/:path*',
-    '/dashboard/:path*',
-  ],
+  // matcher: [
+  //   '/api/:path*',
+  //   '/dashboard/:path*',
+  // ],
+  matcher: []
 };

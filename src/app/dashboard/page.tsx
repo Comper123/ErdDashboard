@@ -1,16 +1,17 @@
 'use client';
 
+
 import SchemaCard from '@/components/cards/SchemaCard';
 import Header from '@/components/Header';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/form/Input';
 import Button from '@/components/ui/form/Button';
-import { useAuth } from '@/hooks/useAuth';
 import { Schema } from '@/types/schemas';
 import { Plus, Search, X, Trash } from "lucide-react"
 import { useEffect, useState } from 'react';
 import EmptySearch from "@/components/EmptySearch"
-
+import { useAuth } from '@/hooks/useAuthSession';
+import { SessionKeepAlive } from '@/components/SessionKeepAlive';
 
 interface CreatedSchema{
   name: string;
@@ -30,7 +31,7 @@ export default function DashboardPage() {
   // Данные
   const [schemas, setSchemas] = useState<Schema[]>([]);
   const [searchSchemas, setSearchSchemas] = useState<Schema[]>([]);
-  const { user, accessToken } = useAuth();
+  const { user } = useAuth();
   const [createdSchema, setCreatedSchema] = useState<CreatedSchema>({name: '', description: '', id: '1'})
   const [searchText, setSearchText] = useState<string>('');
   const [editedSchema, setEditedSchema] = useState<CreatedSchema>({name: '', description: '', id: '1'})
@@ -40,7 +41,7 @@ export default function DashboardPage() {
 
   const [editedSchemaName, setEditedSchemaName] = useState<string>('');
   const [editedSchemaId, setEditedSchemaId] = useState<string>('');
-
+  
   useEffect(() => {
     setSearchSchemas(schemas.filter((schema) => schema.name.startsWith(searchText)));
   }, [schemas, searchText])
@@ -49,9 +50,9 @@ export default function DashboardPage() {
     async function fetchSchemas() {
         try {
           const response = await fetch('/api/schemas', {
-            headers: {
-              'authorization': `Bearer ${accessToken}`,
-            },
+            // headers: {
+            //   'authorization': `Bearer ${accessToken}`,
+            // },
           });
           if (!response.ok) {
             throw new Error('Ошибка загрузки схем');
@@ -65,10 +66,10 @@ export default function DashboardPage() {
       }
     }
 
-    if (user && accessToken) {
+    if (user) {
       fetchSchemas();
     }
-  }, [user, accessToken])
+  }, [user])
 
   const closeCreateModal = () => {
     setIsCreateModalOpen(false);
@@ -90,9 +91,9 @@ export default function DashboardPage() {
           name: createdSchema.name,
           description: createdSchema.description
         }),
-        headers: {
-          'authorization': 'Bearer ' + accessToken
-        }
+        // headers: {
+        //   'authorization': 'Bearer ' + accessToken
+        // }
       });
       if (response.ok) {
         // В случае успешно выполненного запроса на сервере создаем без перезагрузки новую схему
@@ -109,9 +110,9 @@ export default function DashboardPage() {
     try {
       const response = await fetch(`/api/schemas/${deletedSchemaId}`, {
         method: "DELETE",
-        headers: {
-          'authorization': 'Bearer ' + accessToken
-        }
+        // headers: {
+        //   'authorization': 'Bearer ' + accessToken
+        // }
       });
       if (response.ok){
         setSchemas(prev => prev.filter(schema => schema.id !== deletedSchemaId)); 
@@ -130,9 +131,9 @@ export default function DashboardPage() {
       console.log(editedSchema);
       const response = await fetch(`/api/schemas/${editedSchemaId}`, {
         method: "PUT",
-        headers: {
-          'authorization': 'Bearer ' + accessToken
-        },
+        // headers: {
+        //   'authorization': 'Bearer ' + accessToken
+        // },
         body: JSON.stringify({
           name: editedSchema.name,
           description: editedSchema.description
@@ -161,6 +162,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 max-w-[99vw]">
+      <SessionKeepAlive/>
       <Modal isOpen={isCreateModalOpen} onClose={closeCreateModal} title='Создание новой схемы данных' size='sm'>
         <form action="" method='POST' className='py-6 flex flex-col gap-4' onSubmit={handleCreateSchema}>
           <Input type='text' label='Название' value={createdSchema.name} required
@@ -202,7 +204,7 @@ export default function DashboardPage() {
             onChange={(e) => setEditedSchema({...editedSchema, description: e.target.value})}/>
           <div className='grid grid-cols-2 gap-2'>
           <Button size='full' color='gray' type='button' onClick={() => setIsEditModalOpen(false)}>Отмена</Button>
-          <Button size='full' color='red'>Изменить</Button>
+          <Button size='full' color='indigo'>Изменить</Button>
         </div>
         </form>
       </Modal>
@@ -255,3 +257,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+// export default withAuth(DashboardPage);

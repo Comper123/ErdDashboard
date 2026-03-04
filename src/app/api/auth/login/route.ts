@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server';
 import { getUserByEmail, validatePassword } from '@/lib/utils/db-helpers';
 import { generateAccessToken, generateRefreshToken } from '@/lib/auth/jwt';
 import { saveRefreshToken } from '@/lib/auth/token-db';
+import { headers } from 'next/headers';
+import { createSession, getSessionFromCookie, setSessionCookie } from '@/lib/auth/sessions';
 
 export async function POST(request: Request) {
   try {
@@ -35,20 +37,29 @@ export async function POST(request: Request) {
     }
 
     // Генерируем токены
-    const accessToken = generateAccessToken({ userId: user.id, email: user.email });
-    const refreshToken = generateRefreshToken({ userId: user.id, email: user.email });
+    // const accessToken = generateAccessToken({ userId: user.id, email: user.email });
+    // const refreshToken = generateRefreshToken({ userId: user.id, email: user.email });
 
     // Сохраняем refresh token в БД
-    await saveRefreshToken(user.id, refreshToken);
+    // await saveRefreshToken(user.id, refreshToken);
+
+    // Получение информации о клиенте
+    const headersList = await headers();
+    const userAgent = headersList.get('user-agent') || undefined;
+    const ipAddress = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || 'unknown';
+
+    // Создание сессии
+    const session = await createSession(user.id, userAgent, ipAddress);
+    // Установка cookie
+    setSessionCookie(session.sessionToken);
+    console.log("Cookie после установки: ", await getSessionFromCookie());
 
     return NextResponse.json({
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
-      },
-      accessToken,
-      refreshToken,
+      }
     });
   } catch (error) {
     console.error('Login error:', error);

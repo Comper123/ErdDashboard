@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react"
 import { UserRound, LayoutDashboard, LogOut, DatabaseZap } from "lucide-react";
 import Link from "next/link";
 import Sep from "@/components/ui/Sep";
-import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuthSession";
 
 
 export default function Header() {

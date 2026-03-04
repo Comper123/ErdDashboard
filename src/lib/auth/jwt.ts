@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET!;
-const ACCESS_TOKEN_EXPIRY = '15m'; // 15 минут
+const ACCESS_TOKEN_EXPIRY = '1m'; // 15 минут
 const REFRESH_TOKEN_EXPIRY = '7d'; // 7 дней
 
 export interface TokenPayload {

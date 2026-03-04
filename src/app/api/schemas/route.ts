@@ -2,21 +2,21 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { schemas, tables } from '@/lib/db/schema';
-import { eq, desc } from 'drizzle-orm';
-import { getUserFromRequest } from '@/lib/auth/get-user';
+import { eq, desc, and } from 'drizzle-orm';
+import { getSessionFromRequest } from '@/lib/auth/sessions';
 
 // GET /api/schemas - получить все схемы пользователя
 export async function GET(request: NextRequest) {
   try {
-    const user = getUserFromRequest(request);
-    if (!user) {
+    const session = await getSessionFromRequest(request);
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const userSchemas = await db
       .select({id: schemas.id, name: schemas.name, description: schemas.description, createdAt: schemas.createdAt, updatedAt: schemas.updatedAt, 
         tablesCount: db.$count(tables, eq(tables.schemaId, schemas.id))})
-      .from(schemas).where(eq(schemas.userId, user.id)).orderBy(desc(schemas.updatedAt));
+      .from(schemas).where(eq(schemas.userId, session.user.id)).orderBy(desc(schemas.updatedAt));
 
     return NextResponse.json(userSchemas);
   } catch (error) {
@@ -28,8 +28,8 @@ export async function GET(request: NextRequest) {
 // POST /api/schemas - создать новую схему
 export async function POST(request: NextRequest) {
   try {
-    const user = getUserFromRequest(request);
-    if (!user) {
+    const session = await getSessionFromRequest(request);
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const { name, description } = await request.json();
@@ -37,13 +37,13 @@ export async function POST(request: NextRequest) {
     if (!name) {
       return NextResponse.json({ error: 'Schema name is required' }, { status: 400 });
     }
-    const existingSchema = await db.select().from(schemas).where(eq(schemas.name, name));
+    const existingSchema = await db.select().from(schemas).where(and(eq(schemas.name, name), eq(schemas.userId, session.user.id)));
 
     if (existingSchema.length !== 0){
       return NextResponse.json({ error: 'Такая схема уже существует' }, { status: 400 })
     }
 
-    const [newSchema] = await db.insert(schemas).values({userId: user.id, name, description}).returning();
+    const [newSchema] = await db.insert(schemas).values({userId: session.user.id, name, description}).returning();
 
     return NextResponse.json(newSchema, { status: 201 });
   } catch (error) {

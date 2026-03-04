@@ -1,6 +1,7 @@
 // src/lib/db/schema.ts
 import { pgTable, uuid, varchar, timestamp, text, json, boolean } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+import { unique } from 'drizzle-orm/pg-core';
 
 // Пользователи
 export const users = pgTable('users', {
@@ -8,9 +9,22 @@ export const users = pgTable('users', {
   email: varchar('email', { length: 255 }).notNull().unique(),
   password: varchar('password', { length: 255 }).notNull(),
   name: varchar('name', { length: 255 }),
+  isActive : boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+// Сессии
+export const sessions = pgTable('sessions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  sessionToken: varchar('session_token', { length: 255 }).notNull().unique(),
+  expiresAt: timestamp('expires_at').notNull(),
+  userAgent: text('user_agent'),
+  ipAddress: varchar('ip_address', { length: 45 }),
+  lastActivity: timestamp('last_activity').defaultNow().notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull()
+})
 
 // Токены для refresh
 export const refreshTokens = pgTable('refresh_tokens', {
@@ -25,11 +39,14 @@ export const refreshTokens = pgTable('refresh_tokens', {
 export const schemas = pgTable('schemas', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
-  name: varchar('name', { length: 255 }).notNull().unique(),
+  name: varchar('name', { length: 255 }).notNull(),
   description: text('description'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => ({
+  // Составной уникальный индекс: имя должно быть уникальным только для конкретного пользователя
+  uniqueNamePerUser: unique('unique_name_per_user').on(table.userId, table.name)
+}));
 
 // Таблицы в схемах
 export const tables = pgTable('tables', {
@@ -75,6 +92,21 @@ export const relationships = pgTable('relationships', {
 export const usersRelations = relations(users, ({ many }) => ({
   refreshTokens: many(refreshTokens),
   schemas: many(schemas),
+  sessions: many(sessions)
+}));
+
+export const sessionsRelations = relations(sessions, ({ one }) => ({
+  user: one(users, {
+    fields: [sessions.userId],
+    references: [users.id],
+  }),
+}));
+
+export const refreshTokensRelations = relations(refreshTokens, ({ one }) => ({
+  user: one(users, {
+    fields: [refreshTokens.userId],
+    references: [users.id],
+  }),
 }));
 
 export const schemasRelations = relations(schemas, ({ one, many }) => ({
