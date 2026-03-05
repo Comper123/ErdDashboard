@@ -32,6 +32,8 @@ export default function SchemaPage(){
   const [isTableInfoOpen, setIsTableInfoOpen] = useState<boolean>(false);
   // Состояние грид сетки схемы
   const [isGridOpen, setIsGridOpen] = useState<boolean>(false);
+  // Масштаб холста
+  const [scale, setScale] = useState<number>(1.0);
 
   useEffect(() => {
     const fetchSchemaDetail = async () => {
@@ -56,6 +58,20 @@ export default function SchemaPage(){
 
     fetchSchemaDetail();
   }, [])
+
+  // Функция приближения холста
+  const zoomIn = () => {
+    if (scale < 3) {
+      setScale(prev => prev + 0.25);
+    }
+  }
+
+  // Функция отдаления холста
+  const zoomOut = () => {
+    if (scale > 0.5) {
+      setScale(prev => prev - 0.25);
+    }
+  }
 
   if (!user && !authLoading){
     return <EmptyUser />;
@@ -89,9 +105,13 @@ export default function SchemaPage(){
 
           <Toolbar.Group>
             {/* Приближение зума */}
-            <Toolbar.Button icon={<ZoomIn size={20}/>}/>
+            <Toolbar.Button 
+              icon={<ZoomIn size={20}/>}
+              onClick={() => zoomIn()}/>
             {/* Отдаление зума */}
-            <Toolbar.Button icon={<ZoomOut size={20}/>}/>
+            <Toolbar.Button 
+              icon={<ZoomOut size={20}/>}
+              onClick={() => zoomOut()}/>
             {/* Вернуть исходный размер */}
             <Toolbar.Button icon={<Maximize size={20}/>}/>
             {/* Отображение сетки */}
@@ -132,7 +152,10 @@ export default function SchemaPage(){
         </Toolbar>
         
         <ERDEditor
-          isGridOpen={isGridOpen}>
+          isGridOpen={isGridOpen}
+          scale={scale}
+          zoomIn={zoomIn}
+          zoomOut={zoomOut}>
 
         </ERDEditor>
         <SQLEditor
