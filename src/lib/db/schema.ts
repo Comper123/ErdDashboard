@@ -1,7 +1,28 @@
 // src/lib/db/schema.ts
-import { pgTable, uuid, varchar, timestamp, text, json, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, timestamp, text, json, boolean, pgEnum } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { unique } from 'drizzle-orm/pg-core';
+
+
+// Создаем ENUM тип в PostgreSQL
+export const fieldTypeEnum = pgEnum('field_type', [
+  'int', 'bigint', 'smallint',
+  'decimal', 'float', 'double',
+  'varchar', 'text', 'char',
+  'boolean',
+  'date', 'timestamp', 'time', 'interval',
+  'uuid',
+  'json', 'blob', 'jsonb',
+  'array', 'enum'
+]);
+
+// Создаем ENUM тип для связей
+export const relationTypeEnum = pgEnum('relation_type', [
+  'one-to-one',
+  'one-to-many',
+  'many-to-one',
+  'many-to-many'
+])
 
 // Пользователи
 export const users = pgTable('users', {
@@ -43,9 +64,9 @@ export const schemas = pgTable('schemas', {
   description: text('description'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-}, (table) => ({
+}, (schema) => ({
   // Составной уникальный индекс: имя должно быть уникальным только для конкретного пользователя
-  uniqueNamePerUser: unique('unique_name_per_user').on(table.userId, table.name)
+  uniqueNamePerUser: unique('unique_name_per_user').on(schema.userId, schema.name)
 }));
 
 // Таблицы в схемах
@@ -58,14 +79,17 @@ export const tables = pgTable('tables', {
   config: json('config').default({}), // цвет, размер и т.д.
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => ({
+  // Составной уникальный индекс: имя таблицы должно быть уникальным
+  uniqueNamePerSchema: unique('unique_name_per_schema').on(table.schemaId, table.name)
+}));
 
 // Поля таблиц
 export const fields = pgTable('fields', {
   id: uuid('id').defaultRandom().primaryKey(),
   tableId: uuid('table_id').references(() => tables.id, { onDelete: 'cascade' }).notNull(),
   name: varchar('name', { length: 255 }).notNull(),
-  type: varchar('type', { length: 50 }).notNull(), // int, varchar, boolean и т.д.
+  type: fieldTypeEnum('type').notNull(), // используем enum 
   isPrimaryKey: boolean('is_primary_key').default(false),
   isNullable: boolean('is_nullable').default(true),
   isUnique: boolean('is_unique').default(false),
@@ -73,7 +97,9 @@ export const fields = pgTable('fields', {
   position: varchar('position').default('0'), // порядок отображения
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (field) => ({
+  uniqueFieldPerSchema: unique('unique_field_per_schema').on(field.tableId, field.name)
+}));
 
 // Связи между таблицами
 export const relationships = pgTable('relationships', {
@@ -82,7 +108,7 @@ export const relationships = pgTable('relationships', {
   fromFieldId: uuid('from_field_id').references(() => fields.id, { onDelete: 'cascade' }),
   toTableId: uuid('to_table_id').references(() => tables.id, { onDelete: 'cascade' }).notNull(),
   toFieldId: uuid('to_field_id').references(() => fields.id, { onDelete: 'cascade' }),
-  type: varchar('type', { length: 20 }).notNull(), // 'one-to-one', 'one-to-many', 'many-to-many'
+  type: relationTypeEnum('type').notNull(), // 'one-to-one', 'one-to-many', 'many-to-many', 'many-to-one
   config: json('config').default({}), // дополнительные настройки связи
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

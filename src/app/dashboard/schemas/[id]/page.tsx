@@ -63,7 +63,9 @@ export default function SchemaPage(){
 
       {/* Редактор схемы */}
       <section className="relative h-[88vh]">
-        <TableInfo isOpen={isTableInfoOpen} onClose={() => setIsTableInfoOpen(false)}>
+        <TableInfo 
+          isOpen={isTableInfoOpen} 
+          onClose={() => setIsTableInfoOpen(false)}>
 
         </TableInfo>
         <Toolbar>
@@ -91,11 +93,17 @@ export default function SchemaPage(){
 
           <Toolbar.Group>
             {/* Меню SQL */}
-            <Toolbar.Button active={isSqlEditorOpen} onClick={() => setIsSqlEditorOpen(prev => !prev)}>SQL</Toolbar.Button>
+            <Toolbar.Button 
+              active={isSqlEditorOpen} 
+              onClick={() => setIsSqlEditorOpen(prev => !prev)}>
+                SQL
+            </Toolbar.Button>
+
             {/* Меню свойства таблицы */}
-            <Toolbar.Button icon={<Info size={20}/>} 
-                            onClick={() => setIsTableInfoOpen(prev => !prev)}
-                            active={isTableInfoOpen}/>
+            <Toolbar.Button 
+              icon={<Info size={20}/>} 
+              onClick={() => setIsTableInfoOpen(prev => !prev)}
+              active={isTableInfoOpen}/>
           </Toolbar.Group>
 
           <Toolbar.Divider />
@@ -113,7 +121,9 @@ export default function SchemaPage(){
         <ERDEditor>
 
         </ERDEditor>
-        <SQLEditor isOpen={isSqlEditorOpen} onClose={() => setIsSqlEditorOpen(false)}>
+        <SQLEditor
+          isOpen={isSqlEditorOpen} 
+          onClose={() => setIsSqlEditorOpen(false)}>
 
         </SQLEditor>
       </section>
