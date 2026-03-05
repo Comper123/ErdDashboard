@@ -12,6 +12,7 @@ import { useEffect, useState } from 'react';
 import EmptySearch from "@/components/EmptySearch"
 import { useAuth } from '@/hooks/useAuthSession';
 import { SessionKeepAlive } from '@/components/SessionKeepAlive';
+import EmptyUser from '@/components/EmptyUser';
 
 interface CreatedSchema{
   name: string;
@@ -31,7 +32,7 @@ export default function DashboardPage() {
   // Данные
   const [schemas, setSchemas] = useState<Schema[]>([]);
   const [searchSchemas, setSearchSchemas] = useState<Schema[]>([]);
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [createdSchema, setCreatedSchema] = useState<CreatedSchema>({name: '', description: '', id: '1'})
   const [searchText, setSearchText] = useState<string>('');
   const [editedSchema, setEditedSchema] = useState<CreatedSchema>({name: '', description: '', id: '1'})
@@ -158,6 +159,10 @@ export default function DashboardPage() {
     } catch (error) {
       console.log(error);
     }
+  }
+
+  if (!user && !authLoading) {
+    return <EmptyUser/>
   }
 
   return (

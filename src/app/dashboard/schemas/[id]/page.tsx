@@ -9,6 +9,8 @@ import Toolbar from "@/components/erd/Toolbar";
 import ERDEditor from "@/components/erd/ERDEditor";
 import SQLEditor from "@/components/erd/SQLEditor";
 import TableInfo from "@/components/erd/TableInfo";
+import EmptyUser from "@/components/EmptyUser";
+import { SessionKeepAlive } from "@/components/SessionKeepAlive";
 
 
 export default function SchemaPage(){
@@ -25,9 +27,11 @@ export default function SchemaPage(){
   const [isLoadingSchema, setIsLoadingSchema] = useState<boolean>(false);
 
   // Состояние открытия SQL редактора
-  const [isSqlEditorOpen, setIsSqlEditorOpen] = useState<boolean>(true);
+  const [isSqlEditorOpen, setIsSqlEditorOpen] = useState<boolean>(false);
   // Состояние открытия информации о схеме
   const [isTableInfoOpen, setIsTableInfoOpen] = useState<boolean>(false);
+  // Состояние грид сетки схемы
+  const [isGridOpen, setIsGridOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchSchemaDetail = async () => {
@@ -53,8 +57,15 @@ export default function SchemaPage(){
     fetchSchemaDetail();
   }, [])
 
+  if (!user && !authLoading){
+    return <EmptyUser />;
+  }
+
   return (
     <div className="h-screen w-screen max-h-screen">
+      {/* Компонент поднятия сессии пользователя */}
+      <SessionKeepAlive/>
+
       {/* Шапка схемы */}
       <div className="px-[10%] py-4 bg-gray-50 border h-[12vh]">
         <h2 className="font-semibold text-2xl flex items-center gap-2 -ml-8"><Database/>{schema?.name}</h2>
@@ -84,7 +95,9 @@ export default function SchemaPage(){
             {/* Вернуть исходный размер */}
             <Toolbar.Button icon={<Maximize size={20}/>}/>
             {/* Отображение сетки */}
-            <Toolbar.Button icon={<Grid size={20}/>}/>
+            <Toolbar.Button icon={<Grid size={20}/>}
+              active={isGridOpen}
+              onClick={() => setIsGridOpen(prev => !prev)}/>
             {/* Отображение миникарты */}
             <Toolbar.Button icon={<Map size={20}/>}/>
           </Toolbar.Group>
@@ -118,7 +131,8 @@ export default function SchemaPage(){
           </Toolbar.Group>
         </Toolbar>
         
-        <ERDEditor>
+        <ERDEditor
+          isGridOpen={isGridOpen}>
 
         </ERDEditor>
         <SQLEditor

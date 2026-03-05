@@ -55,8 +55,8 @@ export function useAuth() {
   useEffect(() => {
     checkAuth();
 
-    // Периодическая проверка сессии (каждые 5 минут)
-    const interval = setInterval(checkAuth, 5 * 60 * 1000);
+    // Периодическая проверка сессии (каждые 10 минут)
+    const interval = setInterval(checkAuth, 10 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, [checkAuth]);
