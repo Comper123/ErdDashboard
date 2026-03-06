@@ -22,7 +22,7 @@ export default function Modal({
     sm: 'w-[30%]',
     md: 'w-2/5',
     lg: 'w-3/5',
-    xl: 'w-4/5 max-h-[90vh]'
+    xl: 'w-11/12 max-h-[90vh]'
   }
 
   if (!isOpen) return null;

@@ -11,7 +11,7 @@ import SQLEditor from "@/components/erd/SQLEditor";
 import TableInfo from "@/components/erd/TableInfo";
 import EmptyUser from "@/components/EmptyUser";
 import { SessionKeepAlive } from "@/components/SessionKeepAlive";
-import { filedTypes, Table } from "@/types/erd/erdeditor";
+import { filedTypes, relationType, Table } from "@/types/erd/erdeditor";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/form/Input";
 import { Field } from "@/types/erd/erdeditor";
@@ -30,7 +30,7 @@ export default function SchemaPage(){
     description: string;
   } | null>(null);
   const [tables, setTables] = useState<Table[]>([{name: 'ERD', fields: []}])
-  const [createTable, setCreateTable] = useState<Table>({name: '', fields: [{name: 'Поле 1', position: 1, isNull: false}]})
+  const [createTable, setCreateTable] = useState<Table>({name: '', fields: [{name: 'Поле 1', position: 1, isNullable: false, type: '', isPrimaryKey: false, isUnique: false, defaultValue: ''}]})
 
   // Состояние загрузки схемы
   const [isLoadingSchema, setIsLoadingSchema] = useState<boolean>(false);
@@ -95,20 +95,31 @@ export default function SchemaPage(){
     const newPosition = createTable.fields.length;
     const newField = {
       name: '',
-      position: newPosition,
-      isNull: false
+      position: newPosition + 1,
+      isNullable: false,
+      type: '',
+      isPrimaryKey: false,
+      isUnique: false,
+      defaultValue: '',
+      isForeignKey: false,
+      relationType: 'one-to-one',
+      foreignTable: '',
+      foreignField: ''
     }
     setCreateTable(prev => ({...prev, fields: [...prev.fields, newField]}));
   }
 
-  const handleBooleanChange = (fieldId: string, property: keyof Field) => {
-    setFields(prev =>
-      prev.map(field =>
-        field.id === fieldId
-          ? { ...field, [property]: !field[property] }
-          : field
+  const setFieldValue = (fieldPos: number, property: keyof Field, value: any) => {
+    setCreateTable(prev => ({
+      ...prev,
+      fields: prev.fields.map(field =>
+        field.position === fieldPos ? { ...field, [property]: value } : field
       )
-    );
+    }));
+    if (property === 'isForeignKey') {
+
+    }
+  console.log(createTable);
 };
 
   if (!user && !authLoading){
@@ -143,30 +154,70 @@ export default function SchemaPage(){
                 Добавить поле
               </button>
             </div>
+            {/* Шапка таблицы */}
+            <div className="flex items-center w-full mb-2 text-gray-600 font-semibold text-sm">
+              <p className="my-auto pr-4">#</p>
+              <div className="grid grid-cols-24 gap-3 w-full">
+                <p className="col-span-3">Название</p>
+                <p className="col-span-3">Тип данных</p>
+                <p className="">PK</p>
+                <p className="">NULL</p>
+                <p className="">Uniq</p>
+                <p className="col-span-2">Default</p>
+                <p className="">FK</p>
+                <p className="col-span-3">Relationship</p>
+                <p className="col-span-3">ForeignTable</p>
+                <p className="col-span-3">ForeignField</p>
+                <p className="col-span-3">Действия</p>
+              </div>
+            </div>
             <div className="overflow-y-auto max-h-[50vh] h-[50vh] pt-2 -mt-1 flex flex-col gap-3">
+              {/* Поля таблицы */}
               {createTable.fields.map((field, index) => (
                 <div className="flex items-center w-full" key={index}>
                   <p className="my-auto text-gray-600 font-semibold text-sm pr-4">{index + 1}</p>
-                  <div className="grid grid-cols-12 gap-3 w-full">
+                  <div className="grid grid-cols-24 gap-3 w-full">
                     {/* Название поля */}
-                    <div className="col-span-4">
-                      <Input type="text" label="Название поля" placeholder="fieldname" inputSize="small"/>
+                    <div className="col-span-3">
+                      <Input type="text" label="Название поля" placeholder="fieldname" inputSize="small" value={field.name} onChange={(e) => setFieldValue(index + 1, 'name', e.target.value)}/>
                     </div>
-                    <div className="col-span-2 h-full flex items-center">
-                      <Select label="Тип данных" options={filedTypes} inputSize='small'/>
+                    <div className="col-span-3 h-full flex items-center">
+                      <Select label="Тип данных" options={filedTypes} inputSize='small' value={field.type} onChange={(e) => setFieldValue(index + 1, 'type', e.target.value)}/>
                     </div>
                     <div>
-                      <Switch label="isNull" value={field.isNull} onChange={() => field.isNull = !field.isNull}></Switch>
+                      <Switch label="" value={field.isPrimaryKey} onChange={() => setFieldValue(index + 1, 'isPrimaryKey', !field.isPrimaryKey)}></Switch>
+                    </div>
+                    <div>
+                      <Switch label="" value={field.isNullable} onChange={() => setFieldValue(index + 1, 'isNullable', !field.isNullable)}></Switch>
+                    </div>
+                    <div>
+                      <Switch label="" value={field.isUnique} onChange={() => setFieldValue(index + 1, 'isUnique', !field.isUnique)}></Switch>
+                    </div>
+                    <div className="col-span-2">
+                      <Input type="text" label="Default" placeholder="value" inputSize="small" value={field.defaultValue} onChange={(e) => setFieldValue(index + 1, 'defaultValue', e.target.value)}/>
+                    </div>
+                    <div>
+                      <Switch label="" value={field.isForeignKey} onChange={() => setFieldValue(index + 1, 'isForeignKey', !field.isForeignKey)}></Switch>
+                    </div>
+                    <div className="col-span-3">
+                      <Select label="" options={relationType} inputSize='small' value={field.relationType} onChange={(e) => setFieldValue(index + 1, 'relationType', e.target.value)}/>
+                    </div>
+                    <div className="col-span-3">
+                      <Select label="" options={filedTypes} inputSize='small' value={field.type} onChange={(e) => setFieldValue(index + 1, 'type', e.target.value)}/>
+                    </div>
+                    <div className="col-span-3">
+                      <Select label="" options={filedTypes} inputSize='small' value={field.type} onChange={(e) => setFieldValue(index + 1, 'type', e.target.value)}/>
                     </div>
                     {/* Кнопки управления полем */}
-                    <div className="flex gap-1">
+                    <div className="flex gap-1 col-span-3">
                       
                     </div>
                  </div>
                </div>
               ))}
             </div>
-            <div className="mt-6 flex items-end">
+            <div className="mt-6 flex justify-between">
+              <p className="text-sm text-gray-600">Полей в таблице: {createTable.fields.length}</p>
               <Button type="submit" >Добавить</Button>
             </div>
           </form>

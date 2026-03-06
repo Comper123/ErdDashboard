@@ -6,7 +6,7 @@ import { unique } from 'drizzle-orm/pg-core';
 
 // Создаем ENUM тип в PostgreSQL
 export const fieldTypeEnum = pgEnum('field_type', [
-  'int', 'bigint', 'smallint',
+  'int', 'bigint', 'smallint', 'serial',
   'decimal', 'float', 'double',
   'varchar', 'text', 'char',
   'boolean',
