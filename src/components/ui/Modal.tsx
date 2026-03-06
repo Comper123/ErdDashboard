@@ -22,7 +22,7 @@ export default function Modal({
     sm: 'w-[30%]',
     md: 'w-2/5',
     lg: 'w-3/5',
-    xl: 'w-4/5'
+    xl: 'w-4/5 max-h-[90vh]'
   }
 
   if (!isOpen) return null;
@@ -32,8 +32,8 @@ export default function Modal({
   }
 
   return (
-    <div className="fixed z-10 bg-black/50 w-screen h-screen top-0 left-0 bottom-0 right-0 flex items-center justify-center" onClick={onClose}>
-      <div className={`bg-white rounded-xl min-h-20 p-8 ${sizes[size]}`} onClick={stopPropogation}>
+    <div className="fixed z-40 bg-black/50 w-screen h-screen top-0 left-0 bottom-0 right-0 flex items-center justify-center" onClick={onClose}>
+      <div className={`bg-white z-30 rounded-xl min-h-20 p-8 overflow-hidden ${sizes[size]}`} onClick={stopPropogation}>
         <div className="flex justify-between items-center h-max">
           <h2 className="font-bold text-xl">{title}</h2>
           <X className="cursor-pointer" onClick={onClose}></X>

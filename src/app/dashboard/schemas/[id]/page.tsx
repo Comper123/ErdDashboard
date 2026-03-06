@@ -4,14 +4,21 @@
 import { useAuth } from "@/hooks/useAuthSession";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Database, Download, Grid, Info, Map, Maximize, Plus, Save, Upload, ZoomIn, ZoomOut } from "lucide-react";
+import { ArrowLeft, Database, Download, Grid, Info, Map, Maximize, Plus, Save, Upload, ZoomIn, ZoomOut } from "lucide-react";
 import Toolbar from "@/components/erd/Toolbar";
 import ERDEditor from "@/components/erd/ERDEditor";
 import SQLEditor from "@/components/erd/SQLEditor";
 import TableInfo from "@/components/erd/TableInfo";
 import EmptyUser from "@/components/EmptyUser";
 import { SessionKeepAlive } from "@/components/SessionKeepAlive";
-
+import { filedTypes, Table } from "@/types/erd/erdeditor";
+import Modal from "@/components/ui/Modal";
+import Input from "@/components/ui/form/Input";
+import { Field } from "@/types/erd/erdeditor";
+import Button from "@/components/ui/form/Button";
+import Select from "@/components/ui/form/Select";
+import Switch from "@/components/ui/form/Swith";
+import { isNull } from "drizzle-orm";
 
 export default function SchemaPage(){
   const { id } = useParams();
@@ -22,18 +29,22 @@ export default function SchemaPage(){
     name: string;
     description: string;
   } | null>(null);
+  const [tables, setTables] = useState<Table[]>([{name: 'ERD', fields: []}])
+  const [createTable, setCreateTable] = useState<Table>({name: '', fields: [{name: 'Поле 1', position: 1, isNull: false}]})
 
   // Состояние загрузки схемы
   const [isLoadingSchema, setIsLoadingSchema] = useState<boolean>(false);
-
   // Состояние открытия SQL редактора
   const [isSqlEditorOpen, setIsSqlEditorOpen] = useState<boolean>(false);
   // Состояние открытия информации о схеме
   const [isTableInfoOpen, setIsTableInfoOpen] = useState<boolean>(false);
   // Состояние грид сетки схемы
-  const [isGridOpen, setIsGridOpen] = useState<boolean>(false);
+  const [isGridOpen, setIsGridOpen] = useState<boolean>(true);
   // Масштаб холста
   const [scale, setScale] = useState<number>(1.0);
+  // Состояние открытия модального окна создания таблицы
+  const [isOpenModalCreateTable, setIsOpenModalCreateTable] = useState<boolean>(false);
+
 
   useEffect(() => {
     const fetchSchemaDetail = async () => {
@@ -73,6 +84,33 @@ export default function SchemaPage(){
     }
   }
 
+  // Функция добавления таблицы
+  const addTable = async (e: React.SubmitEvent) => {
+    e.preventDefault();
+
+  }
+
+  // Функция добавления пустого поля
+  const addEmptyField = () => {
+    const newPosition = createTable.fields.length;
+    const newField = {
+      name: '',
+      position: newPosition,
+      isNull: false
+    }
+    setCreateTable(prev => ({...prev, fields: [...prev.fields, newField]}));
+  }
+
+  const handleBooleanChange = (fieldId: string, property: keyof Field) => {
+    setFields(prev =>
+      prev.map(field =>
+        field.id === fieldId
+          ? { ...field, [property]: !field[property] }
+          : field
+      )
+    );
+};
+
   if (!user && !authLoading){
     return <EmptyUser />;
   }
@@ -81,11 +119,69 @@ export default function SchemaPage(){
     <div className="h-screen w-screen max-h-screen">
       {/* Компонент поднятия сессии пользователя */}
       <SessionKeepAlive/>
+      <Modal 
+        isOpen={isOpenModalCreateTable} 
+        onClose={() => setIsOpenModalCreateTable(false)}
+        size="xl"
+        title="Создание таблицы">
+        <div className="mt-3">
+          <form action="" onSubmit={(e) => addTable(e)}>
+            <div className="w-1/3">
+              <Input type="text" label="Название" placeholder="Например: users"/>
+            </div>
+            {/* Заголовок полей */}
+            <div className="flex items-center justify-between mb-3 mt-5">
+              <p className="text-gray-700 font-medium">Поля таблицы</p>
+              <button
+                type="button"
+                className="text-sm text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1"
+                onClick={() => addEmptyField()}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Добавить поле
+              </button>
+            </div>
+            <div className="overflow-y-auto max-h-[50vh] h-[50vh] pt-2 -mt-1 flex flex-col gap-3">
+              {createTable.fields.map((field, index) => (
+                <div className="flex items-center w-full" key={index}>
+                  <p className="my-auto text-gray-600 font-semibold text-sm pr-4">{index + 1}</p>
+                  <div className="grid grid-cols-12 gap-3 w-full">
+                    {/* Название поля */}
+                    <div className="col-span-4">
+                      <Input type="text" label="Название поля" placeholder="fieldname" inputSize="small"/>
+                    </div>
+                    <div className="col-span-2 h-full flex items-center">
+                      <Select label="Тип данных" options={filedTypes} inputSize='small'/>
+                    </div>
+                    <div>
+                      <Switch label="isNull" value={field.isNull} onChange={() => field.isNull = !field.isNull}></Switch>
+                    </div>
+                    {/* Кнопки управления полем */}
+                    <div className="flex gap-1">
+                      
+                    </div>
+                 </div>
+               </div>
+              ))}
+            </div>
+            <div className="mt-6 flex items-end">
+              <Button type="submit" >Добавить</Button>
+            </div>
+          </form>
+        </div>
+      </Modal>
 
       {/* Шапка схемы */}
-      <div className="px-[10%] py-4 bg-gray-50 border h-[12vh]">
-        <h2 className="font-semibold text-2xl flex items-center gap-2 -ml-8"><Database/>{schema?.name}</h2>
-        <p className="text-gray-400 text-sm">{schema?.description}</p>
+      <div className="px-[10%] py-4 bg-gray-50 border h-[12vh] flex justify-between items-center">
+        <div>
+          <h2 className="font-semibold text-2xl flex items-center gap-2 -ml-8"><Database/>{schema?.name}</h2>
+          <p className="text-gray-400 text-sm">{schema?.description}</p>
+        </div>
+        <div>
+          <a href="/dashboard" className="bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500 px-6 py-2 rounded-lg flex items-center gap-2"><ArrowLeft className="h-4"/>Мои схемы</a>
+        </div>
       </div>
 
       {/* Редактор схемы */}
@@ -98,7 +194,9 @@ export default function SchemaPage(){
         <Toolbar>
           <Toolbar.Group>
             {/* Добавление новой таблицы */}
-            <Toolbar.Button icon={<Plus size={20}/>} />
+            <Toolbar.Button 
+              icon={<Plus size={20}/>} 
+              onClick={() => setIsOpenModalCreateTable(true)}/>
           </Toolbar.Group>
           
           <Toolbar.Divider />
@@ -113,7 +211,9 @@ export default function SchemaPage(){
               icon={<ZoomOut size={20}/>}
               onClick={() => zoomOut()}/>
             {/* Вернуть исходный размер */}
-            <Toolbar.Button icon={<Maximize size={20}/>}/>
+            <Toolbar.Button 
+              icon={<Maximize size={20}/>}
+              onClick={() => setScale(1)}/>
             {/* Отображение сетки */}
             <Toolbar.Button icon={<Grid size={20}/>}
               active={isGridOpen}
@@ -155,7 +255,9 @@ export default function SchemaPage(){
           isGridOpen={isGridOpen}
           scale={scale}
           zoomIn={zoomIn}
-          zoomOut={zoomOut}>
+          zoomOut={zoomOut}
+          openCreateTableModal={() => setIsOpenModalCreateTable(true)}
+          tables={tables}>
 
         </ERDEditor>
         <SQLEditor

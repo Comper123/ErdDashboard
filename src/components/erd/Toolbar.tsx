@@ -6,7 +6,7 @@ import { ToolbarButtonProps, ToolbarGroupProps, ToolbarProps } from "@/types/erd
 // Компонент Панели инструментов
 export default function Toolbar({ children } : ToolbarProps){
   return (
-    <div className="absolute bottom-5 left-[50%] translate-x-[-50%] bg-gray-100 rounded-xl flex items-center p-2 z-40">
+    <div className="absolute bottom-5 left-[50%] translate-x-[-50%] bg-gray-100 rounded-xl flex items-center p-2 z-20">
       {children}
     </div>
   )

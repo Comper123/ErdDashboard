@@ -13,6 +13,7 @@ interface BaseInputProps {
     required?: boolean;
     name?: string;
     placeholder?: string;
+    inputSize?: 'base' | 'small';
 }
 
 // Пропсы для Input
@@ -43,7 +44,8 @@ export default function Input({
     name,
     multiline = false,
     rows = 4,
-    placeholder = ''
+    placeholder = '',
+    inputSize = 'base'
 }: FieldProps) {
     const [isFocused, setIsFocused] = useState(false);
     const [inputValue, setInputValue] = useState(value);
@@ -67,12 +69,17 @@ export default function Input({
         }
     };
 
+    const inputSizes = {
+        small: 'py-2 px-3 text-sm',
+        base: 'py-3 px-4 text-base'
+    }
+
     const handleLabelClick = () => {inputRef.current?.focus()};
     const isActive = isFocused || inputValue.length > 0;
 
     // Общие классы для поля ввода
     const fieldClasses = `
-        w-full px-4 py-3 
+        w-full ${inputSizes[inputSize]}
         border-2 rounded-lg 
         outline-none transition-all duration-300
         border-gray-200 focus:border-indigo-500
@@ -85,7 +92,7 @@ export default function Input({
     return (
         <div className={`relative w-full ${className}`}>
             {/* Контейнер для инпута */}
-            <div className="relative">
+            <div className={`relative`}>
                 {multiline ? (
                     <textarea
                         ref={inputRef as React.RefObject<HTMLTextAreaElement>}
@@ -112,7 +119,7 @@ export default function Input({
                         required={required}
                         name={name}
                         className={fieldClasses}
-                        placeholder={placeholder}
+                        placeholder={isFocused && value.length === 0 ? placeholder : ''}
                     />
                 )}
                 {/* Плавающая подсказка (лейбл) */}
@@ -123,7 +130,7 @@ export default function Input({
                         pointer-events-none cursor-text
                         ${isActive 
                             ? '-top-2.5 text-xs bg-white px-1' 
-                            : 'top-3 text-gray-500'
+                            : ` text-gray-500 ${inputSize === 'base' ? 'text-base top-3' : 'text-sm top-2'}`
                         }
                         text-gray-700
                         ${disabled ? 'bg-gray-100' : 'bg-white'}
