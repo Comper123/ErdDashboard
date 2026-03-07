@@ -83,7 +83,7 @@ export default function Select({
               border-2 rounded-lg appearance-none
               outline-none transition-all duration-300
               ${isFocused ? 'border-indigo-500' : 'border-gray-200'}
-              ${disabled ? 'bg-gray-50 cursor-not-allowed' : 'bg-white cursor-pointer'}
+              ${disabled ? 'bg-gray-200 cursor-not-allowed' : 'bg-white cursor-pointer'}
               text-gray-900
               focus:border-indigo-500 focus:shadow-lg
           `}

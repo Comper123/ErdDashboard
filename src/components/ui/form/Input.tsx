@@ -35,7 +35,7 @@ type FieldProps = InputFieldProps | TextareaFieldProps;
 
 export default function Input({
     type = 'text',
-    label,
+    label = '',
     value = '',
     onChange,
     className = '',
@@ -119,30 +119,32 @@ export default function Input({
                         required={required}
                         name={name}
                         className={fieldClasses}
-                        placeholder={isFocused && value.length === 0 ? placeholder : ''}
+                        placeholder={(isFocused || label?.length === 0) && value.length === 0 ? placeholder : ''}
                     />
                 )}
                 {/* Плавающая подсказка (лейбл) */}
-                <label
-                    onClick={handleLabelClick}
-                    className={`
-                        absolute left-3 transition-all duration-200 
-                        pointer-events-none cursor-text
-                        ${isActive 
-                            ? '-top-2.5 text-xs bg-white px-1' 
-                            : ` text-gray-500 ${inputSize === 'base' ? 'text-base top-3' : 'text-sm top-2'}`
-                        }
-                        text-gray-700
-                        ${disabled ? 'bg-gray-100' : 'bg-white'}
-                        rounded
-                    `}
-                    style={{
-                        transform: isActive ? 'translateY(0)' : 'translateY(0)',
-                    }}
-                >
-                    {label}
-                    {required && <span className="text-red-500 ml-1">*</span>}
-                </label>
+                {label?.length > 0 && (
+                    <label
+                        onClick={handleLabelClick}
+                        className={`
+                            absolute left-3 transition-all duration-200 
+                            pointer-events-none cursor-text
+                            ${isActive 
+                                ? '-top-2.5 text-xs bg-white px-1' 
+                                : ` text-gray-500 ${inputSize === 'base' ? 'text-base top-3' : 'text-sm top-2'}`
+                            }
+                            text-gray-700
+                            ${disabled ? 'bg-gray-100' : 'bg-white'}
+                            rounded
+                        `}
+                        style={{
+                            transform: isActive ? 'translateY(0)' : 'translateY(0)',
+                        }}
+                    >
+                        {label}
+                        {required && <span className="text-red-500 ml-1">*</span>}
+                    </label>
+                )}
             </div>
         </div>
     )

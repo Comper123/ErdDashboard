@@ -29,12 +29,18 @@ export interface Field {
 
 export interface Table {
     name: string;
-    fields: Field[]
+    position: {
+        x: number;
+        y: number;
+    },
+    isFocused: boolean;
+    fields: Field[];
 }
 
 export interface TableComponentProps {
     table: Table;
     scale: number;
+    deleteModalOpen: () => void;
 }
 
 export interface ERDEditorProps {

@@ -31,7 +31,7 @@ export default function Switch({
                     inline-block transform rounded-full bg-white shadow
                     transition-transform duration-300 ease-in-out
                     w-4 h-4
-                    ${value ? 'translate-x-5' : 'translate-x-1'}
+                    ${value ? 'translate-x-4' : 'translate-x-1'}
                 `}
             />
         </button>
