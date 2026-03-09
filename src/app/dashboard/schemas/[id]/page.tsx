@@ -31,7 +31,8 @@ export default function SchemaPage(){
   } | null>(null);
   const [tables, setTables] = useState<Table[]>([]);
   const emptyTable = {
-    name: '', 
+    name: '',
+    id: '',
     isFocused: true,
     position: {x: 0, y: 0},
     fields: [{name: '', position: 1, isNullable: false, type: '', isPrimaryKey: false, isUnique: false, defaultValue: '', isForeignKey: false, relationType: '', foreignTable: '', foreignField: ''}]
@@ -50,6 +51,8 @@ export default function SchemaPage(){
   const [scale, setScale] = useState<number>(1.0);
   // Состояние открытия модального окна создания таблицы
   const [isOpenModalCreateTable, setIsOpenModalCreateTable] = useState<boolean>(false);
+  // Состояние отправки данных на сервер
+  const [isDataSending, setIsDataSending] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchSchemaDetail = async () => {
@@ -93,11 +96,25 @@ export default function SchemaPage(){
   const addTable = async (e: React.SubmitEvent) => {
     e.preventDefault();
     setTables(prev => ([...prev, createTable]));
-    setCreateTable(emptyTable);
-    setIsOpenModalCreateTable(false);
 
     // Отправка создаваемой таблицы на сервер
-    // ! ________________
+    try {
+      setIsDataSending(true);
+      const response  = await fetch(`/api/schemas/${id}/detail`, {
+        method: "POST",
+        body: JSON.stringify({schema: createTable})
+      })
+      if (response.ok) {
+        setIsOpenModalCreateTable(false);
+        setCreateTable(emptyTable);
+      } else {
+        // SetError ?
+      }
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setIsDataSending(false);
+    }
   }
 
   // Функция добавления пустого поля

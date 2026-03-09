@@ -5,6 +5,7 @@ import { schemas, tables, fields, relationships } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { getSessionFromCookie } from '@/lib/auth/sessions';
 
+
 // GET /api/schemas/[id]/detail - получить конкретную схему
 export async function GET(
   request: NextRequest,
@@ -56,4 +57,27 @@ export async function GET(
       { status: 500 }
     );
   }
+}
+
+export async function POST(
+  request: NextRequest,
+  { params } : { params : Promise<{id: string}>}
+){
+  const { id } = await params;
+  const { newTable } = await request.json();
+
+  const createdTable = await db.insert(tables).values({
+    schemaId: id,
+    name: newTable.name,
+    positionX: newTable.position.x,
+    positionY: newTable.position.y
+  }).returning()
+
+  console.log("Созданная таблица: ", createdTable);
+
+  // const createdFields = await db.insert(tables).values(newTable.map(field => {
+  //   tableId: createdTable.id
+  // }))
+
+  return NextResponse.json({ error: ''}, { status: 500 })
 }

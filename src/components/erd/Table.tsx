@@ -93,7 +93,7 @@ export default function Table({
       onMouseDown={handleMouseDownTable}
       onMouseUp={handleMouseUpTable}>
       {/* Шапка таблицы */}
-      <div className="px-4  h-12 flex items-center justify-between" onMouseEnter={() => setIsActionBtn(true)} onMouseLeave={() => {if(!isActionsOpen) setIsActionBtn(false)}}>
+      <div className="px-4  h-12 flex items-center justify-between border-b-2" onMouseEnter={() => setIsActionBtn(true)} onMouseLeave={() => {if(!isActionsOpen) setIsActionBtn(false)}}>
         <p className="text-gray-600 font-semibold flex gap-1 items-center">
           <TableProperties size={16}/>
           {table.name}
@@ -105,7 +105,7 @@ export default function Table({
           </ActionsBlock>
         )}
       </div>
-      <hr />
+      {/* <hr className=""/> */}
       {/* Поля таблицы */}
       <div className="flex gap-1 p-2 flex-col">
         {table.fields.map(field => (

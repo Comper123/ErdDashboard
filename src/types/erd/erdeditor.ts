@@ -29,6 +29,7 @@ export interface Field {
 
 export interface Table {
     name: string;
+    id?: string;
     position: {
         x: number;
         y: number;
