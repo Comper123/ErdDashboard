@@ -38,6 +38,7 @@ export default function SchemaPage(){
     fields: [{name: '', position: 1, isNullable: false, type: '', isPrimaryKey: false, isUnique: false, defaultValue: '', isForeignKey: false, relationType: '', foreignTable: '', foreignField: ''}]
   };
   const [createTable, setCreateTable] = useState<Table>(emptyTable);
+  const [createTableErrors, setCreateTableErrors] = useState({});
 
   // Состояние загрузки схемы
   const [isLoadingSchema, setIsLoadingSchema] = useState<boolean>(false);
@@ -60,13 +61,13 @@ export default function SchemaPage(){
         setIsLoadingSchema(true);
         const response = await fetch(`/api/schemas/${id}/detail`);
         const data = await response.json();
-
         if (response.ok){
           setSchema({
             id: data.id,
             name: data.name,
             description: data.description
-          })
+          });
+          setTables(data.tables);
         }
       } catch (error) {
         console.log(error);
@@ -92,6 +93,14 @@ export default function SchemaPage(){
     }
   }
 
+  // Функция валидация создания таблицы
+  const validateCreateTable = () => {
+    if (tables.map(table => table.name).includes(createTable.name)){
+      setCreateTableErrors(prev => ({...prev, name: "Такая таблица уже существует"}))
+      throw new Error("Такая таблица уже существует")
+    }
+  }
+
   // Функция добавления таблицы
   const addTable = async (e: React.SubmitEvent) => {
     e.preventDefault();
@@ -100,13 +109,15 @@ export default function SchemaPage(){
     // Отправка создаваемой таблицы на сервер
     try {
       setIsDataSending(true);
-      const response  = await fetch(`/api/schemas/${id}/detail`, {
+      validateCreateTable();
+      const response  = await fetch(`/api/schemas/${id}/detail/table`, {
         method: "POST",
-        body: JSON.stringify({schema: createTable})
+        body: JSON.stringify({table: createTable})
       })
       if (response.ok) {
         setIsOpenModalCreateTable(false);
         setCreateTable(emptyTable);
+
       } else {
         // SetError ?
       }
@@ -190,7 +201,9 @@ export default function SchemaPage(){
         <div className="mt-3">
           <form action="" onSubmit={(e) => addTable(e)}>
             <div className="w-1/3">
-              <Input type="text" label="Название" placeholder="Например: users" value={createTable.name} onChange={(e) => setCreateTable(table => ({...table, name: e.target.value}))}/>
+              <Input type="text" label="Название" placeholder="Например: users" value={createTable.name} 
+                onChange={(e) => setCreateTable(table => ({...table, name: e.target.value}))}
+                isError={createTableErrors?.name ? true : false}/>
             </div>
             {/* Заголовок полей */}
             <div className="flex items-center justify-between mb-3 mt-5">

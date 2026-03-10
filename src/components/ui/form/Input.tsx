@@ -14,6 +14,7 @@ interface BaseInputProps {
     name?: string;
     placeholder?: string;
     inputSize?: 'base' | 'small';
+    isError?: boolean;
 }
 
 // Пропсы для Input
@@ -45,7 +46,8 @@ export default function Input({
     multiline = false,
     rows = 4,
     placeholder = '',
-    inputSize = 'base'
+    inputSize = 'base',
+    isError = false 
 }: FieldProps) {
     const [isFocused, setIsFocused] = useState(false);
     const [inputValue, setInputValue] = useState(value);
@@ -82,7 +84,7 @@ export default function Input({
         w-full ${inputSizes[inputSize]}
         border-2 rounded-lg 
         outline-none transition-all duration-300
-        border-gray-200 focus:border-indigo-500
+        ${isError ? 'border-red-500' : 'border-gray-200'} focus:border-indigo-500
         ${disabled ? 'bg-gray-50 cursor-not-allowed' : 'bg-white'}
         text-gray-900
         focus:shadow-lg

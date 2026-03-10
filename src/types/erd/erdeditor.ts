@@ -34,9 +34,10 @@ export interface Table {
         x: number;
         y: number;
     },
-    isFocused: boolean;
+    isFocused?: boolean;
     fields: Field[];
 }
+
 
 export interface TableComponentProps {
     table: Table;

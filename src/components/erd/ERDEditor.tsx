@@ -64,7 +64,7 @@ export default function ERDEditor({
     // Правильный расчет смещения
     const deltaX = startPosition.x - e.clientX;
     const deltaY = startPosition.y - e.clientY;
-    
+  
     const newOffset = {
       x: offset.x - deltaX,
       y: offset.y - deltaY

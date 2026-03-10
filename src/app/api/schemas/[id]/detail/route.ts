@@ -40,14 +40,32 @@ export async function GET(
     }
 
     // 2. Получаем все таблицы схемы
+    const schemaTables = await db.select().from(tables).where(eq(tables.schemaId, schema.id));
+
     // 3. Получаем все поля для каждой таблицы
+    const formatTables = await Promise.all(
+      schemaTables.map(async (t) => {
+        const tableFields = await db.select().from(fields).where(eq(fields.tableId, t.id))
+        return {
+          id: t.id,
+          name: t.name,
+          position: {
+            x: t.positionX,
+            y: t.positionY
+          },
+          isFocused: false,
+          fields: tableFields
+        }
+      })
+    )
     // 4. Получаем все связи
 
     // 5. Формируем ответ
     return NextResponse.json({
       id: schema.id,
       name: schema.name,
-      description: schema.description
+      description: schema.description,
+      tables: formatTables
     });
 
   } catch (error) {
@@ -59,25 +77,3 @@ export async function GET(
   }
 }
 
-export async function POST(
-  request: NextRequest,
-  { params } : { params : Promise<{id: string}>}
-){
-  const { id } = await params;
-  const { newTable } = await request.json();
-
-  const createdTable = await db.insert(tables).values({
-    schemaId: id,
-    name: newTable.name,
-    positionX: newTable.position.x,
-    positionY: newTable.position.y
-  }).returning()
-
-  console.log("Созданная таблица: ", createdTable);
-
-  // const createdFields = await db.insert(tables).values(newTable.map(field => {
-  //   tableId: createdTable.id
-  // }))
-
-  return NextResponse.json({ error: ''}, { status: 500 })
-}
