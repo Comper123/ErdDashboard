@@ -2,12 +2,13 @@ import { ERDEditorProps } from "@/types/erd/erdeditor";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Table from "./Table";
 
+
 export default function ERDEditor({
   isGridOpen,
   scale,
   zoomIn,
   zoomOut,
-  openCreateTableModal,
+  openDeleteTableModal,
   tables
 } : ERDEditorProps){
   const [isDragging, setIsDragging] = useState(false);
@@ -163,7 +164,7 @@ export default function ERDEditor({
         // onClick={!isDragging ? openCreateTableModal : () => {}}
         >
           {tables.map((table) => (
-            <Table key={table.name} table={table} scale={scale}/>
+            <Table key={table.name} table={table} scale={scale} openDeleteTableModal={openDeleteTableModal}/>
           ))}
       </div>
     </div>

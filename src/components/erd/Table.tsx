@@ -7,9 +7,9 @@ import { TableProperties } from "lucide-react";
 export default function Table({ 
   scale,
   table,
-  deleteModalOpen
+  openDeleteTableModal
 } : TableComponentProps){
-  const [isFocused, setIsFocused] = useState<boolean>(table.isFocused);
+  const [isFocused, setIsFocused] = useState<boolean>(table.isFocused || false);
   const [isMoving, setIsMoving] = useState<boolean>(false);
   const [isActionsOpen, setIsActionsOpen] = useState<boolean>(false);
   const [isActionBtn, setIsActionBtn] = useState<boolean>(false);
@@ -24,21 +24,21 @@ export default function Table({
 
     setIsMoving(true);
     setIsFocused(true);
-
+    console.log(e.clientX, position.x)
     setDragStart({
-      x: e.clientX - position.x,
-      y: e.clientY - position.y
+      x: Math.round((e.clientX - position.x * scale) / scale),
+      y: Math.round((e.clientY - position.y * scale) / scale)
     });
 
-  }, [position, isActionsOpen])
+  }, [position, isActionsOpen, scale])
 
   const handleMouseMoveTable = useCallback((e: MouseEvent) => {
     if (!isMoving) return;
     e.preventDefault();
     
     const newPosition = {
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y
+      x: Math.round((e.clientX / scale) - dragStart.x),
+      y: Math.round((e.clientY / scale) - dragStart.y)
     };
     
     setPosition(newPosition);
@@ -47,13 +47,24 @@ export default function Table({
     // if (onPositionChange) {
     //   onPositionChange(table.id, newPosition);
     // }
-  }, [isMoving, dragStart]);
+  }, [isMoving, dragStart, scale]);
 
-  const handleMouseUpTable = useCallback((e: MouseEvent) => {
+  const handleMouseUpTable = useCallback(async (e: MouseEvent) => {
     e.preventDefault();
     setIsMoving(false);
     setIsFocused(false);
-  }, []);
+    // Отправляем новые координаты на сервер
+    const response = await fetch(`/api/tables/${table.id}/coords`, {
+      method: "POST",
+      body: JSON.stringify({
+        newX: position.x,
+        newY: position.y
+      }),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+  }, [table, position]);
 
   // Добавляем и удаляем глобальные обработчики
   useEffect(() => {
@@ -86,12 +97,12 @@ export default function Table({
         transform: `scale(${scale})`,
         minWidth: '200px',
         minHeight: '300px',
-        left: position.x,
-        top: position.y,
+        left: position.x * scale,
+        top: position.y * scale,
         transformOrigin: 'top left'
       }}
       onMouseDown={handleMouseDownTable}
-      onMouseUp={handleMouseUpTable}>
+      onMouseUp={() => handleMouseUpTable}>
       {/* Шапка таблицы */}
       <div className="px-4  h-12 flex items-center justify-between border-b-2" onMouseEnter={() => setIsActionBtn(true)} onMouseLeave={() => {if(!isActionsOpen) setIsActionBtn(false)}}>
         <p className="text-gray-600 font-semibold flex gap-1 items-center">
@@ -100,8 +111,8 @@ export default function Table({
         </p>
         {isActionBtn && (
           <ActionsBlock isOpen={isActionsOpen} setIsOpen={setIsActionsOpen}>
-            <Action onClick={() => deleteTable()} afterClick={() => {}}>Удалить</Action>
-            <Action onClick={() => {}} afterClick={() => {}}>Изменить</Action>
+            <Action onClick={() => openDeleteTableModal(table.id)} afterClick={() => setIsActionsOpen(false)}>Удалить</Action>
+            <Action onClick={() => {}} afterClick={() => setIsActionsOpen(false)}>Изменить</Action>
           </ActionsBlock>
         )}
       </div>

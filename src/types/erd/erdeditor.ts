@@ -29,7 +29,7 @@ export interface Field {
 
 export interface Table {
     name: string;
-    id?: string;
+    id: string;
     position: {
         x: number;
         y: number;
@@ -42,7 +42,7 @@ export interface Table {
 export interface TableComponentProps {
     table: Table;
     scale: number;
-    deleteModalOpen: () => void;
+    openDeleteTableModal: (tableId: string) => void;
 }
 
 export interface ERDEditorProps {
@@ -50,6 +50,6 @@ export interface ERDEditorProps {
     scale: number;
     zoomIn: () => void;
     zoomOut: () => void;
-    openCreateTableModal: () => void;
+    openDeleteTableModal: (tableId: string) => void;
     tables: Table[]
 }

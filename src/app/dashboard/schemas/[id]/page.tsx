@@ -2,7 +2,7 @@
 
 
 import { useAuth } from "@/hooks/useAuthSession";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowDown, ArrowLeft, ArrowUp, Database, Download, Grid, Info, Map, Maximize, Plus, Save, Trash, Upload, ZoomIn, ZoomOut } from "lucide-react";
 import Toolbar from "@/components/erd/Toolbar";
@@ -22,6 +22,7 @@ import Switch from "@/components/ui/form/Swith";
 
 export default function SchemaPage(){
   const { id } = useParams();
+  const schemaId = id.toString();
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
   const [schema, setSchema] = useState<{
@@ -54,6 +55,12 @@ export default function SchemaPage(){
   const [isOpenModalCreateTable, setIsOpenModalCreateTable] = useState<boolean>(false);
   // Состояние отправки данных на сервер
   const [isDataSending, setIsDataSending] = useState<boolean>(false);
+
+  // Состояние открытия модального окна удаления таблицы
+  const [isOpenModalDeleteTable, setIsOpenModalDeleteTable] = useState<boolean>(false);
+  // Id удаляемой таблицы
+  const [deletedTableId, setDeletedTableId] = useState<string>('');
+  const [deletedTableName, setDeletedTableName] = useState<string>('');
 
   useEffect(() => {
     const fetchSchemaDetail = async () => {
@@ -185,6 +192,13 @@ export default function SchemaPage(){
     }
   }
 
+  const openDeleteModal = useCallback((tableId: string) => {
+    setIsOpenModalDeleteTable(true);
+    setDeletedTableId(tableId);
+    const tableName = tables.find(t => t.id === tableId)?.name || '';
+    setDeletedTableName(tableName);
+  }, [])
+
   if (!user && !authLoading){
     return <EmptyUser />;
   }
@@ -193,6 +207,13 @@ export default function SchemaPage(){
     <div className="h-screen w-screen max-h-screen">
       {/* Компонент поднятия сессии пользователя */}
       <SessionKeepAlive/>
+      <Modal isOpen={isOpenModalDeleteTable} onClose={() => setIsOpenModalDeleteTable(false)}>
+        <div>
+          <p>Удаление схемы</p>
+          <p>{deletedTableName}</p>
+        </div>
+      </Modal>
+
       <Modal 
         isOpen={isOpenModalCreateTable} 
         onClose={() => setIsOpenModalCreateTable(false)}
@@ -391,7 +412,7 @@ export default function SchemaPage(){
           scale={scale}
           zoomIn={zoomIn}
           zoomOut={zoomOut}
-          openCreateTableModal={() => setIsOpenModalCreateTable(true)}
+          openDeleteTableModal={openDeleteModal}
           tables={tables}>
 
         </ERDEditor>
