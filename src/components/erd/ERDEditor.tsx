@@ -9,6 +9,7 @@ export default function ERDEditor({
   zoomIn,
   zoomOut,
   openDeleteTableModal,
+  openEditTableModal,
   tables
 } : ERDEditorProps){
   const [isDragging, setIsDragging] = useState(false);
@@ -164,7 +165,7 @@ export default function ERDEditor({
         // onClick={!isDragging ? openCreateTableModal : () => {}}
         >
           {tables.map((table) => (
-            <Table key={table.name} table={table} scale={scale} openDeleteTableModal={openDeleteTableModal}/>
+            <Table key={table.name} table={table} scale={scale} openDeleteTableModal={openDeleteTableModal} openEditTableModal={openEditTableModal}/>
           ))}
       </div>
     </div>

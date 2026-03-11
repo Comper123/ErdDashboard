@@ -18,6 +18,7 @@ import { Field } from "@/types/erd/erdeditor";
 import Button from "@/components/ui/form/Button";
 import Select from "@/components/ui/form/Select";
 import Switch from "@/components/ui/form/Swith";
+import ColorPicker from "@/components/ui/form/ColorPicker";
 
 
 export default function SchemaPage(){
@@ -36,7 +37,8 @@ export default function SchemaPage(){
     id: '',
     isFocused: true,
     position: {x: 0, y: 0},
-    fields: [{name: '', position: 1, isNullable: false, type: '', isPrimaryKey: false, isUnique: false, defaultValue: '', isForeignKey: false, relationType: '', foreignTable: '', foreignField: ''}]
+    fields: [{name: '', position: 1, isNullable: false, type: '', isPrimaryKey: false, isUnique: false, defaultValue: '', isForeignKey: false, relationType: '', foreignTable: '', foreignField: ''}],
+    color: '#000000'
   };
   const [createTable, setCreateTable] = useState<Table>(emptyTable);
   const [createTableErrors, setCreateTableErrors] = useState({});
@@ -63,6 +65,11 @@ export default function SchemaPage(){
   const [deletedTableName, setDeletedTableName] = useState<string>('');
   // Подтверждение удаляемой таблицы
   const [confirmTableName, setConfirmTableName] = useState<string>('');
+  const [isErrorConfirmDeletion, setIsErrorConfirmDeletion] = useState<boolean>(false);
+
+  // Изменение таблицы
+  const [isEditTableModalOpen, setIsEditTableModalOpen] = useState<boolean>(false);
+
 
   useEffect(() => {
     const fetchSchemaDetail = async () => {
@@ -125,8 +132,17 @@ export default function SchemaPage(){
       })
       if (response.ok) {
         setIsOpenModalCreateTable(false);
+        // Добавляем id у новой таблицы
+        const data = await response.json();
+        console.log(data)
+        setTables(prevTables => prevTables.map((t) => {
+          if (t.name == createTable.name) {
+            return {...t, id: data.newTable.id}
+          } else {
+            return t
+          }
+        }));
         setCreateTable(emptyTable);
-        
       } else {
         // SetError ?
       }
@@ -195,16 +211,38 @@ export default function SchemaPage(){
   }
 
   const openDeleteModal = useCallback((tableId: string) => {
-    setDeletedTableId(tableId);
-    const tableName = tables.find(t => t.id == tableId)?.name || '';
-    setDeletedTableName(tableName);
-    setIsOpenModalDeleteTable(true);
-    console.log(tableId);
+    const tableName = tables.find(t => t.id == tableId)?.name;
+    if (tableName) {
+      setDeletedTableName(tableName);
+      setDeletedTableId(tableId);
+      setIsOpenModalDeleteTable(true);
+    }
+  }, [tables])
+
+  const openEditModal = useCallback((tableId: string) => {
+    setIsEditTableModalOpen(true);
   }, [])
 
-  const handleDeleteTable = async () => {
-    
-  }
+  const handleDeleteTable = useCallback(async () => {
+    if (confirmTableName === deletedTableName) {
+      try {
+        const response = await fetch(`/api/tables/${deletedTableId}`, {
+          method: "DELETE"
+        })
+        if (response.ok){
+          // Удаляем в списке таблиц на клиенте
+          setTables(prevtables => prevtables.filter(t => t.id !== deletedTableId));
+          setIsOpenModalDeleteTable(false);
+        }
+      } catch (error) {
+        console.log(error);
+      } 
+      setIsErrorConfirmDeletion(false);
+      setConfirmTableName('');
+    } else {
+      setIsErrorConfirmDeletion(true);
+    }
+  }, [confirmTableName, deletedTableName, deletedTableId]);
 
   if (!user && !authLoading){
     return <EmptyUser />;
@@ -214,6 +252,11 @@ export default function SchemaPage(){
     <div className="h-screen w-screen max-h-screen">
       {/* Компонент поднятия сессии пользователя */}
       <SessionKeepAlive/>
+
+      <Modal isOpen={isEditTableModalOpen} onClose={() => setIsEditTableModalOpen(false)} title="Изменение таблицы">
+        <div></div>
+      </Modal>
+
       <Modal 
         isOpen={isOpenModalDeleteTable} 
         onClose={() => setIsOpenModalDeleteTable(false)}
@@ -237,7 +280,11 @@ export default function SchemaPage(){
             </div>
             <div className="mb-4">
               <p className="text-gray-400 text-sm font-medium">Для подтверждения удаления введите имя удаляемой таблицы</p>
-              <Input type="text" value={confirmTableName} onChange={(e) => setConfirmTableName(e.target.value)} className="mt-2 mb-6" placeholder={deletedTableName}/>
+              {isErrorConfirmDeletion && (
+                <p className="text-red-600 text-xs mt-2">Имя таблицы и введенное вами значение не совпадает</p>
+              )}
+              <Input type="text" value={confirmTableName} onChange={(e) => setConfirmTableName(e.target.value)} className="mt-2 mb-6" placeholder={deletedTableName}
+                isError={isErrorConfirmDeletion}/>
             </div>
             <div className='grid grid-cols-2 gap-2'>
               <Button size='full' color='gray' type='button' onClick={() => setIsOpenModalDeleteTable(false)}>Отмена</Button>
@@ -253,10 +300,19 @@ export default function SchemaPage(){
         title="Создание таблицы">
         <div className="mt-3">
           <form action="" onSubmit={(e) => addTable(e)}>
-            <div className="w-1/3">
-              <Input type="text" label="Название" placeholder="Например: users" value={createTable.name} 
+            <div className="flex gap-10 items-center w-full">
+              <div className="w-1/3 pt-2">
+                <Input type="text" label="Название" placeholder="Например: users" value={createTable.name} 
                 onChange={(e) => setCreateTable(table => ({...table, name: e.target.value}))}
                 isError={createTableErrors?.name ? true : false}/>
+              </div>
+              <div className="w-1/3">
+                <ColorPicker
+                  value={createTable.color || '#4f46e5'}
+                  onChange={(color) => setCreateTable(prev => ({...prev, color: color}))}
+                  error={createTableErrors?.color}
+                />
+              </div>
             </div>
             {/* Заголовок полей */}
             <div className="flex items-center justify-between mb-3 mt-5">
@@ -445,6 +501,7 @@ export default function SchemaPage(){
           zoomIn={zoomIn}
           zoomOut={zoomOut}
           openDeleteTableModal={openDeleteModal}
+          openEditTableModal={openEditModal}
           tables={tables}>
 
         </ERDEditor>

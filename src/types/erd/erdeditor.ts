@@ -36,6 +36,7 @@ export interface Table {
     },
     isFocused?: boolean;
     fields: Field[];
+    color: string;
 }
 
 
@@ -43,6 +44,7 @@ export interface TableComponentProps {
     table: Table;
     scale: number;
     openDeleteTableModal: (tableId: string) => void;
+    openEditTableModal: (tableId: string) => void;
 }
 
 export interface ERDEditorProps {
@@ -51,5 +53,6 @@ export interface ERDEditorProps {
     zoomIn: () => void;
     zoomOut: () => void;
     openDeleteTableModal: (tableId: string) => void;
-    tables: Table[]
+    tables: Table[],
+    openEditTableModal: (tableId: string) => void;
 }

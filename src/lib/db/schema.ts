@@ -79,6 +79,7 @@ export const tables = pgTable('tables', {
   config: json('config').default({}), // цвет, размер и т.д.
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  color: varchar('color', { length: 10 }).default('#000000')
 }, (table) => ({
   // Составной уникальный индекс: имя таблицы должно быть уникальным
   uniqueNamePerSchema: unique('unique_name_per_schema').on(table.schemaId, table.name)

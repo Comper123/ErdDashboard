@@ -54,7 +54,8 @@ export async function GET(
             y: t.positionY
           },
           isFocused: false,
-          fields: tableFields
+          fields: tableFields,
+          color: t.color
         }
       })
     )

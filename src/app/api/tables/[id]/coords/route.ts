@@ -9,7 +9,7 @@ export async function POST(
     request: NextRequest,
     { params } : { params: Promise<{ id: string }>}
 ){
-    const session = getSessionFromRequest(request);
+    const session = await getSessionFromRequest(request);
     if (!session) {
         return Response.json({ error: "Вы не авторизованы" }, { status: 401 })
     }

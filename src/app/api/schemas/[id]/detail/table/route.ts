@@ -22,18 +22,17 @@ export async function POST(
   const { table } = await request.json();
   const newTable = table;
 
-  const createdTable = await db.insert(tables).values({
+  const [createdTable] = await db.insert(tables).values({
     schemaId: id,
     name: newTable.name,
     positionX: newTable.position.x,
-    positionY: newTable.position.y
+    positionY: newTable.position.y,
+    color: newTable.color
   }).returning()
-
-  console.log("Созданная таблица: ", createdTable);
 
   if (newTable.fields && newTable.fields.length > 0) {
     const fieldsToInsert = newTable.fields.map(field => ({
-      tableId: createdTable[0].id,
+      tableId: createdTable.id,
       name: field.name,
       type: field.type,
       isPrimaryKey: field.isPrimaryKey || false,
@@ -43,8 +42,7 @@ export async function POST(
       position: field.position || 0
     }));
     const insertingFields = await db.insert(fields).values(fieldsToInsert).returning();
-    console.log("Созданные поля: ", insertingFields);
   }
-
+  newTable.id = createdTable.id;
   return NextResponse.json(newTable, { status: 200 })
 }
