@@ -61,6 +61,8 @@ export default function SchemaPage(){
   // Id удаляемой таблицы
   const [deletedTableId, setDeletedTableId] = useState<string>('');
   const [deletedTableName, setDeletedTableName] = useState<string>('');
+  // Подтверждение удаляемой таблицы
+  const [confirmTableName, setConfirmTableName] = useState<string>('');
 
   useEffect(() => {
     const fetchSchemaDetail = async () => {
@@ -124,7 +126,7 @@ export default function SchemaPage(){
       if (response.ok) {
         setIsOpenModalCreateTable(false);
         setCreateTable(emptyTable);
-
+        
       } else {
         // SetError ?
       }
@@ -193,11 +195,16 @@ export default function SchemaPage(){
   }
 
   const openDeleteModal = useCallback((tableId: string) => {
-    setIsOpenModalDeleteTable(true);
     setDeletedTableId(tableId);
-    const tableName = tables.find(t => t.id === tableId)?.name || '';
+    const tableName = tables.find(t => t.id == tableId)?.name || '';
     setDeletedTableName(tableName);
+    setIsOpenModalDeleteTable(true);
+    console.log(tableId);
   }, [])
+
+  const handleDeleteTable = async () => {
+    
+  }
 
   if (!user && !authLoading){
     return <EmptyUser />;
@@ -207,10 +214,35 @@ export default function SchemaPage(){
     <div className="h-screen w-screen max-h-screen">
       {/* Компонент поднятия сессии пользователя */}
       <SessionKeepAlive/>
-      <Modal isOpen={isOpenModalDeleteTable} onClose={() => setIsOpenModalDeleteTable(false)}>
+      <Modal 
+        isOpen={isOpenModalDeleteTable} 
+        onClose={() => setIsOpenModalDeleteTable(false)}
+        title={`Удаление таблицы`}
+        size="sm">
         <div>
-          <p>Удаление схемы</p>
-          <p>{deletedTableName}</p>
+          <p>Вы действительно хотите удалить таблицу <span className="text-black bg-gray-200 px-2 pb-1 rounded-md font-medium">{deletedTableName}</span></p>
+           <div className='rounded-lg bg-red-50 border border-red-200 flex gap-4 p-4 mb-6 mt-4'> 
+              <div className="flex-shrink-0">
+                <div className='bg-red-100 rounded-full p-3'>
+                  <Trash className='w-6 h-6 text-red-600' />
+                </div>
+              </div>
+              
+              <div className="space-y-1 text-sm">
+                <p className="font-medium text-red-800">Безвозвратное удаление</p>
+                <p className='text-red-600'>Вы не сможете восстановить эту таблицу.</p>
+                <p className='text-red-600'>Она будет удалена безвозвратно.</p>
+                <p className='text-red-600 font-medium'>Вы уверены?</p>
+              </div>
+            </div>
+            <div className="mb-4">
+              <p className="text-gray-400 text-sm font-medium">Для подтверждения удаления введите имя удаляемой таблицы</p>
+              <Input type="text" value={confirmTableName} onChange={(e) => setConfirmTableName(e.target.value)} className="mt-2 mb-6" placeholder={deletedTableName}/>
+            </div>
+            <div className='grid grid-cols-2 gap-2'>
+              <Button size='full' color='gray' type='button' onClick={() => setIsOpenModalDeleteTable(false)}>Отмена</Button>
+              <Button size='full' color='red' onClick={() => handleDeleteTable()}>Удалить</Button>
+            </div>
         </div>
       </Modal>
 

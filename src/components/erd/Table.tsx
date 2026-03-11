@@ -121,6 +121,9 @@ export default function Table({
       <div className="flex gap-1 p-2 flex-col">
         {table.fields.map(field => (
           <div key={field.position}>
+            <div className="w-3">
+
+            </div>
             <p>{field.name}</p>
           </div>
         ))}
